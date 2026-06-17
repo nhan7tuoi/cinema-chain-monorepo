@@ -1,0 +1,17 @@
+!.env.dist
+#Ẩn tất cả các file cấu hình môi trường (Bất kể có đuôi gì phía sau)
+.env
+# .env.*
+
+#Ẩn thư mục cài đặt của tất cả các package
+node_modules
+.pnpm-store
+
+#Ẩn các thư mục build của NestJS và Next.js con
+dist
+.next
+out
+
+#Ẩn log của hệ thống
+*.log
+.turbo

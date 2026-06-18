@@ -1,0 +1,137 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "commonjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================================================================
+// 1. PHÂN HỆ AUTHENTICATION & DANH TÍNH (USER & EMPLOYEE)
+// =========================================================================
+
+enum UserType {
+  CUSTOMER
+  EMPLOYEE
+  ADMIN
+  SUPER_ADMIN
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String
+  userType    UserType  @default(CUSTOMER)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Quan hệ 1:1 mở rộng thông tin cho từng loại đối tượng
+  customer    Customer?
+  employee    Employee?
+
+  @@map("users")
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fullName    String
+  phone       String?
+  points      Int       @default(0)
+  rank        String    @default("MEMBER") // MEMBER, VIP, VVIP
+  birthDate   DateTime?
+
+  @@map("customers")
+}
+
+model Employee {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fullName    String
+  phone       String?
+  code        String   @unique // Mã nhân viên định danh (Ví dụ: NV001, NV002...)
+  
+  // Địa bàn làm việc của nhân viên
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  
+  // Quan hệ nhiều-nhiều với bảng nhóm quyền (Role) thông qua bảng trung gian
+  roles       EmployeeRole[]
+
+  @@map("employees")
+}
+
+// =========================================================================
+// 2. PHÂN HỆ PHÂN QUYỀN ĐỘNG (DYNAMIC RBAC MATRIX)
+// =========================================================================
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique // Ví dụ: "Quản lý chi nhánh", "Trưởng ca", "Thu ngân"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees   EmployeeRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+// Bảng trung gian kết nối Nhân viên <-> Nhóm quyền (Many-to-Many)
+model EmployeeRole {
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  roleId     String
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([employeeId, roleId])
+  @@map("employee_roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique // Định danh quyền bằng chuỗi ký tự dạng "module:action" (Ví dụ: "movie:create", "branch:read")
+  description String?
+  module      String   // Phân nhóm cha trên FE (Ví dụ: "Quản Lý Phim", "Cấu Hình Hệ Thống")
+
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+// Bảng trung gian kết nối Nhóm quyền <-> Quyền chi tiết (Many-to-Many)
+model RolePermission {
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// =========================================================================
+// 3. PHÂN HỆ CƠ SỞ HẠ TẦNG (MASTER DATA)
+// =========================================================================
+
+model Branch {
+  id        String   @id @default(uuid())
+  name      String   @unique // Ví dụ: "Cinema Hùng Vương", "Cinema Landmark 81"
+  address   String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employees Employee[]
+
+  @@map("branches")
+}

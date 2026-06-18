@@ -12,3 +12,43 @@ export interface IUser {
   branch_id?: number;
   created_at: Date;
 }
+
+// Authentication DTOs
+export interface ILoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface IRegisterRequest {
+  email: string;
+  password: string;
+  fullName: string;
+  phone?: string;
+}
+
+export interface IAuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: {
+    id: string;
+    email: string;
+    userType: string;
+    fullName: string;
+  };
+}
+
+export interface IRefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface IJwtPayload {
+  sub: string;
+  email: string;
+  userType: string;
+}
+
+export interface IUserContext {
+  userId: string;
+  email: string;
+  userType: string;
+}

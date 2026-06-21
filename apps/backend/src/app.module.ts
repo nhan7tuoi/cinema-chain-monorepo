@@ -6,6 +6,10 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
 import { PrismaModule } from './prisma.module';
 import { RedisModule } from './modules/redis/redis.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { EmployeesModule } from './modules/employees/employees.module';
+import { CustomersModule } from './modules/customers/customers.module';
+import { BranchesModule } from './modules/branches/branches.module';
 
 @Module({
   imports: [
@@ -17,6 +21,10 @@ import { RedisModule } from './modules/redis/redis.module';
     RedisModule,
     AuthModule,
     UsersModule,
+    RolesModule,
+    EmployeesModule,
+    CustomersModule,
+    BranchesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

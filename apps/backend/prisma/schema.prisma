@@ -1,7 +1,6 @@
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client-js"
+  output       = "../../node_modules/.prisma/generated"
   moduleFormat = "commonjs"
 }
 
@@ -10,61 +9,70 @@ datasource db {
 }
 
 // =========================================================================
-// 1. PHÂN HỆ AUTHENTICATION & DANH TÍNH (USER & EMPLOYEE)
+// 1. PHÂN HỆ AUTHENTICATION & DANH TÍNH (USER, CUSTOMER, EMPLOYEE)
 // =========================================================================
 
 enum UserType {
   CUSTOMER
   EMPLOYEE
+  MANAGER
   ADMIN
   SUPER_ADMIN
 }
 
-model User {
-  id          String    @id @default(uuid())
-  email       String    @unique
-  password    String
-  userType    UserType  @default(CUSTOMER)
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+enum UserStatus {
+  ACTIVE
+  LOCKED
+  HIDDEN
+}
 
-  // Quan hệ 1:1 mở rộng thông tin cho từng loại đối tượng
-  customer    Customer?
-  employee    Employee?
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique // Cho phép null để khách hàng đăng ký thuần bằng SĐT
+  phone     String?  @unique // SĐT định danh đăng nhập chính (Hệ thống tổng)
+  password  String
+  userType  UserType   @default(CUSTOMER) // Loại tài khoản cao nhất hoặc mặc định
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Mối quan hệ 1:1 song song. Một User có thể đồng thời có cả profile Customer và Employee
+  customer  Customer?
+  employee  Employee?
 
   @@map("users")
 }
 
 model Customer {
-  id          String    @id @default(uuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  fullName    String
-  phone       String?
-  points      Int       @default(0)
-  rank        String    @default("MEMBER") // MEMBER, VIP, VVIP
-  birthDate   DateTime?
+  fullName  String
+  points    Int       @default(0)
+  rank      String    @default("MEMBER") // MEMBER, VIP, VVIP
+  birthDate DateTime?
+  slug      String?   @db.VarChar(255)
 
   @@map("customers")
 }
 
 model Employee {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  fullName    String
-  phone       String?
-  code        String   @unique // Mã nhân viên định danh (Ví dụ: NV001, NV002...)
+  fullName  String
+  code      String   @unique // Mã nhân viên nội bộ (Ví dụ: NV001, NV002...)
+  slug      String?  @db.VarChar(255)
   
-  // Địa bàn làm việc của nhân viên
-  branchId    String?
-  branch      Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  // Địa bàn làm việc của nhân viên tại cơ sở
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   
-  // Quan hệ nhiều-nhiều với bảng nhóm quyền (Role) thông qua bảng trung gian
-  roles       EmployeeRole[]
+  // Vai trò của nhân viên trong hệ thống (Dynamic RBAC)
+  roleId    String?
+  role      Role?    @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
   @@map("employees")
 }
@@ -75,40 +83,35 @@ model Employee {
 
 model Role {
   id          String   @id @default(uuid())
-  name        String   @unique // Ví dụ: "Quản lý chi nhánh", "Trưởng ca", "Thu ngân"
+  code        String   @unique // Mã định danh hệ thống viết hoa (Ví dụ: "BRANCH_MANAGER")
+  name        String   // Tên hiển thị tiếng Việt (Ví dụ: "Quản Lý Chi Nhánh")
   description String?
+  isSystem    Boolean  @default(false) // Chặn xóa nhầm các role cấu hình cứng hệ thống
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  employees   EmployeeRole[]
+
   permissions RolePermission[]
+  employees   Employee[]
 
   @@map("roles")
 }
 
-// Bảng trung gian kết nối Nhân viên <-> Nhóm quyền (Many-to-Many)
-model EmployeeRole {
-  employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  roleId     String
-  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@id([employeeId, roleId])
-  @@map("employee_roles")
-}
 
 model Permission {
   id          String   @id @default(uuid())
-  name        String   @unique // Định danh quyền bằng chuỗi ký tự dạng "module:action" (Ví dụ: "movie:create", "branch:read")
+  name        String   @unique // Cấu trúc dạng "module:action" (Ví dụ: "movie:create")
+  displayName String   // Nhãn tiếng Việt để render lên FE (Ví dụ: "Thêm phim mới")
+  module      String   // Nhóm cha (Ví dụ: "Quản Lý Phim")
   description String?
-  module      String   // Phân nhóm cha trên FE (Ví dụ: "Quản Lý Phim", "Cấu Hình Hệ Thống")
 
   roles       RolePermission[]
 
   @@map("permissions")
 }
 
-// Bảng trung gian kết nối Nhóm quyền <-> Quyền chi tiết (Many-to-Many)
+// Bảng trung gian kết nối Nhóm quyền <-> Quyền chi tiết
 model RolePermission {
   roleId       String
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -125,7 +128,7 @@ model RolePermission {
 
 model Branch {
   id        String   @id @default(uuid())
-  name      String   @unique // Ví dụ: "Cinema Hùng Vương", "Cinema Landmark 81"
+  name      String   @unique 
   address   String
   phone     String?
   createdAt DateTime @default(now())

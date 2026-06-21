@@ -13,7 +13,6 @@ export interface IUser {
   created_at: Date;
 }
 
-// Authentication DTOs
 export interface ILoginRequest {
   email: string;
   password: string;
@@ -31,9 +30,11 @@ export interface IAuthResponse {
   refreshToken: string;
   user: {
     id: string;
-    email: string;
+    email: string | null;
     userType: string;
     fullName: string;
+    roles: string[];
+    permissions: string[];
   };
 }
 
@@ -43,12 +44,12 @@ export interface IRefreshTokenRequest {
 
 export interface IJwtPayload {
   sub: string;
-  email: string;
+  email: string | null;
   userType: string;
 }
 
 export interface IUserContext {
   userId: string;
-  email: string;
+  email: string | null;
   userType: string;
 }

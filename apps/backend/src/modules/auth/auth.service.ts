@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { IAuthResponse, IJwtPayload } from '@cinema/types';
-import { UserType } from '@prisma/client';
+import { UserType } from '.prisma/generated';
 import { PrismaService } from '../../prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { ConfigService } from '@nestjs/config';
@@ -31,7 +31,7 @@ export class AuthService {
     return null;
   }
 
-  private async getTokens(userId: string, email: string, userType: string) {
+  private async getTokens(userId: string, email: string | null, userType: string) {
     const payload: IJwtPayload = { sub: userId, email, userType };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
@@ -59,13 +59,27 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.email, user.userType);
     
+    const role = await this.prisma.role.findUnique({
+      where: { code: user.userType },
+      include: {
+        permissions: {
+          include: { permission: true },
+        },
+      },
+    });
+
+    const roles: string[] = [user.userType];
+    const permissions: string[] = role?.permissions?.map((rp: any) => rp.permission?.name).filter(Boolean) || [];
+
     return {
       ...tokens,
       user: {
         id: user.id,
         email: user.email,
         userType: user.userType,
-        fullName: 'Unknown',
+        fullName: user.employee?.fullName || user.customer?.fullName || 'Unknown',
+        roles,
+        permissions,
       },
     };
   }
@@ -82,6 +96,7 @@ export class AuthService {
       const user = await prisma.user.create({
         data: {
           email: registerDto.email,
+          phone: registerDto.phone,
           password: hashedPassword,
           userType: UserType.CUSTOMER,
         },
@@ -91,7 +106,6 @@ export class AuthService {
         data: {
           userId: user.id,
           fullName: registerDto.fullName,
-          phone: registerDto.phone,
         },
       });
 
@@ -106,6 +120,8 @@ export class AuthService {
         email: newUser.email,
         userType: newUser.userType,
         fullName: registerDto.fullName,
+        roles: [],
+        permissions: [],
       },
     };
   }

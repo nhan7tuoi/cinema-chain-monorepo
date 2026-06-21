@@ -1,7 +1,6 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import Cookies from 'js-cookie';
 
-// Tạo instance axios với cấu hình mặc định
 const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   timeout: 10000, // 10 giây
@@ -24,10 +23,8 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Interceptor cho Request
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Lấy token từ cookies (để Middleware trên server cũng có thể đọc được)
     if (typeof window !== 'undefined') {
       const token = Cookies.get('access_token');
       if (token && config.headers) {
@@ -41,14 +38,11 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Interceptor cho Response
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Có thể format lại response data ở đây nếu cần thiết
     return response;
   },
   async (error: AxiosError) => {
-    // Xử lý các lỗi chung từ API
     if (error.response) {
       const { status } = error.response;
       
@@ -56,7 +50,6 @@ apiClient.interceptors.response.use(
         case 401:
           const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-          // Xử lý logic logout nếu đang ở server hoặc url là auth/refresh hoặc đã thử retry rồi
           if (typeof window === 'undefined' || originalRequest.url === '/auth/refresh' || originalRequest._retry) {
             if (typeof window !== 'undefined') {
               Cookies.remove('access_token');
@@ -127,7 +120,6 @@ apiClient.interceptors.response.use(
           console.error('API Error:', error.message);
       }
     } else if (error.request) {
-      // Lỗi không nhận được phản hồi từ server (mất mạng, server sập...)
       console.error('Network Error: Không thể kết nối tới server.');
     }
 

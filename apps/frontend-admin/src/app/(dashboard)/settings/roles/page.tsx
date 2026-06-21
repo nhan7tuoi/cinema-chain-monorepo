@@ -19,8 +19,8 @@ import {
   FolderLock
 } from "lucide-react"
 import apiClient from "@/lib/axios"
+import toast from "react-hot-toast"
 
-// Types
 interface Role {
   id: string
   code: string
@@ -37,7 +37,6 @@ interface Permission {
   description: string | null
 }
 
-// Map Vietnamese/Dynamic module names to icons
 const getModuleIcon = (moduleName: string) => {
   const name = moduleName.toLowerCase()
   if (name.includes("phim") || name.includes("movie")) return Film
@@ -51,7 +50,6 @@ const getModuleIcon = (moduleName: string) => {
   return FolderLock
 }
 
-// Simple color assignment based on permission action
 const getActionColor = (permName: string) => {
   const action = permName.split(":")[1]?.toLowerCase() || ""
   if (action === "read" || action === "view") return "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/30"
@@ -74,7 +72,6 @@ export default function RolePermissionsPage() {
   const [isLoadingRole, setIsLoadingRole] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Fetch initial data
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoadingData(true)
@@ -91,7 +88,6 @@ export default function RolePermissionsPage() {
           setRoles(rolesData)
           setPermissions(permsData)
 
-          // Group permissions by module
           const grouped = permsData.reduce((acc: any, perm: any) => {
             if (!acc[perm.module]) acc[perm.module] = []
             acc[perm.module].push(perm)
@@ -100,7 +96,6 @@ export default function RolePermissionsPage() {
           
           setGroupedPermissions(grouped)
 
-          // Select first role by default if available
           if (rolesData.length > 0) {
             handleSelectRole(rolesData[0])
           }
@@ -146,14 +141,11 @@ export default function RolePermissionsPage() {
     const modulePerms = groupedPermissions[moduleName] || []
     const modulePermIds = modulePerms.map(p => p.id)
     
-    // Check if all permissions in this module are currently selected
     const isAllSelected = modulePermIds.every(id => selectedRolePermIds.includes(id))
     
     if (isAllSelected) {
-      // Remove all module perms
       setSelectedRolePermIds(prev => prev.filter(id => !modulePermIds.includes(id)))
     } else {
-      // Add all module perms
       setSelectedRolePermIds(prev => {
         const newSet = new Set([...prev, ...modulePermIds])
         return Array.from(newSet)
@@ -168,9 +160,11 @@ export default function RolePermissionsPage() {
       await apiClient.put(`/roles/${selectedRole.id}/permissions`, {
         permissionIds: selectedRolePermIds
       })
-      // Could show a success toast here
-    } catch (error) {
+      toast.success("Lưu cấu hình quyền thành công!")
+    } catch (error: any) {
       console.error("Failed to save permissions", error)
+      const errorMsg = error.response?.data?.message || "Lưu cấu hình thất bại!"
+      toast.error(typeof errorMsg === 'string' ? errorMsg : errorMsg[0] || "Thất bại!")
     } finally {
       setIsSaving(false)
     }

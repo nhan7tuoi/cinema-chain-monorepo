@@ -45,19 +45,30 @@ export class UsersService {
     }
 
     if (user.userType === 'CUSTOMER') {
-      return this.prisma.customer.update({
+      return this.prisma.customer.upsert({
         where: { userId },
-        data: {
-          fullName: data.fullName,
+        create: {
+          userId,
+          fullName: data.fullName || 'Khách hàng',
           avatarUrl: data.avatarUrl,
+        },
+        update: {
+          ...(data.fullName && { fullName: data.fullName }),
+          ...(data.avatarUrl && { avatarUrl: data.avatarUrl }),
         },
       });
     } else {
-      return this.prisma.employee.update({
+      return this.prisma.employee.upsert({
         where: { userId },
-        data: {
-          fullName: data.fullName,
+        create: {
+          userId,
+          fullName: data.fullName || 'Nhân viên',
           avatarUrl: data.avatarUrl,
+          code: `EMP_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        },
+        update: {
+          ...(data.fullName && { fullName: data.fullName }),
+          ...(data.avatarUrl && { avatarUrl: data.avatarUrl }),
         },
       });
     }

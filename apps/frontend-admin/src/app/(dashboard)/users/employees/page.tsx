@@ -6,9 +6,11 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, Plus, ShieldCheck } from "lucide-react"
 import Cookies from "js-cookie"
+import toast from "react-hot-toast"
 
 import apiClient from "@/lib/axios"
 import { EmployeeModal } from "./components/employee-modal"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function EmployeesPage() {
   const [permissions, setPermissions] = useState<string[]>([])
@@ -32,6 +34,7 @@ export default function EmployeesPage() {
         const transformed = res.data.data.map((emp: any) => ({
           id: emp.id,
           code: emp.code,
+          avatarUrl: emp.avatarUrl || null,
           fullName: emp.fullName,
           email: emp.user?.email || "N/A",
           phone: emp.user?.phone || "N/A",
@@ -95,14 +98,17 @@ export default function EmployeesPage() {
     try {
       if (selectedEmployee) {
         await apiClient.put(`/employees/${selectedEmployee.id}`, formData)
+        toast.success("Cập nhật nhân viên thành công!")
       } else {
         await apiClient.post("/employees", formData)
+        toast.success("Thêm nhân viên thành công!")
       }
       setIsModalOpen(false)
       fetchEmployees() // Refresh table
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save employee", error)
-      alert("Có lỗi xảy ra khi lưu nhân viên!")
+      const errorMsg = error.response?.data?.message || "Có lỗi xảy ra khi lưu nhân viên!"
+      toast.error(typeof errorMsg === 'string' ? errorMsg : errorMsg[0] || "Có lỗi xảy ra!")
     }
   }
 
@@ -110,10 +116,12 @@ export default function EmployeesPage() {
     if (!confirm("Bạn có chắc chắn muốn xóa nhân viên này?")) return
     try {
       await apiClient.delete(`/employees/${id}`)
+      toast.success("Xóa nhân viên thành công!")
       fetchEmployees()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete employee", error)
-      alert("Có lỗi xảy ra khi xóa nhân viên!")
+      const errorMsg = error.response?.data?.message || "Có lỗi xảy ra khi xóa nhân viên!"
+      toast.error(typeof errorMsg === 'string' ? errorMsg : errorMsg[0] || "Có lỗi xảy ra!")
     }
   }
 
@@ -124,6 +132,22 @@ export default function EmployeesPage() {
       cell: ({ row }) => <span className="font-mono text-xs">{row.getValue("code")}</span>,
     },
     {
+      accessorKey: "avatarUrl",
+      header: "Avatar",
+      cell: ({ row }) => {
+        const url = row.getValue("avatarUrl") as string | null
+        const name = row.getValue("fullName") as string
+        return (
+          <Avatar className="h-8 w-8 shadow-sm">
+            <AvatarImage src={url || ""} alt={name} className="object-cover" />
+            <AvatarFallback className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-400 text-xs font-semibold">
+              {name?.charAt(0)?.toUpperCase() || "NV"}
+            </AvatarFallback>
+          </Avatar>
+        )
+      },
+    },
+    {
       accessorKey: "fullName",
       header: "Họ Tên",
     },
@@ -131,10 +155,10 @@ export default function EmployeesPage() {
       accessorKey: "email",
       header: "Email",
     },
-    {
-      accessorKey: "phone",
-      header: "Số Điện Thoại",
-    },
+    // {
+    //   accessorKey: "phone",
+    //   header: "Số Điện Thoại",
+    // },
     {
       accessorKey: "role",
       header: "Vai Trò",

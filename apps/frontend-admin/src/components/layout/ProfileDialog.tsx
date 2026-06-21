@@ -10,6 +10,7 @@ import { useS3Upload } from "@/hooks/useS3Upload"
 import apiClient from "@/lib/axios"
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
+import toast from "react-hot-toast"
 
 interface ProfileDialogProps {
   isOpen: boolean
@@ -42,7 +43,7 @@ export function ProfileDialog({ isOpen, onOpenChange, user, onProfileUpdated }: 
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       if (file.size > 2 * 1024 * 1024) {
-        alert("File size must be less than 2MB")
+        toast.error("File size must be less than 2MB")
         return
       }
       setAvatarFile(file)
@@ -57,33 +58,32 @@ export function ProfileDialog({ isOpen, onOpenChange, user, onProfileUpdated }: 
       setIsSuccess(false)
       let finalAvatarUrl = user?.avatarUrl
 
-      // 1. Nếu có file mới, sử dụng hook uploadFile
       if (avatarFile) {
         finalAvatarUrl = await uploadFile(avatarFile)
       }
 
-      // 2. Cập nhật Profile qua Backend API
       await apiClient.patch("/users/me", {
         fullName,
         avatarUrl: finalAvatarUrl,
       })
 
-      // 3. Cập nhật cookie user_info
       if (user) {
         const updatedUser = { ...user, fullName, avatarUrl: finalAvatarUrl }
         Cookies.set("user_info", JSON.stringify(updatedUser))
       }
 
       setIsSuccess(true)
+      toast.success("Cập nhật hồ sơ thành công!")
       onProfileUpdated()
       
       setTimeout(() => {
         onOpenChange(false)
       }, 1000)
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update profile", error)
-      alert("Cập nhật thất bại. Vui lòng thử lại!")
+      const errorMsg = error.response?.data?.message || "Cập nhật thất bại. Vui lòng thử lại!"
+      toast.error(typeof errorMsg === 'string' ? errorMsg : errorMsg[0] || "Cập nhật thất bại")
     } finally {
       setIsLoading(false)
     }

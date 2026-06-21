@@ -14,13 +14,12 @@ export class EmployeesController {
 
   @Post()
   create(@Body() data: any) {
-    // In a real app we'd use DTOs and hash passwords. For now, simple Prisma create
     return this.employeesService.create(data);
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() data: any) {
-    return this.employeesService.update(id, data);
+    console.log("UPDATE DATA:", data); return this.employeesService.update(id, data);
   }
 
   @Delete(':id')

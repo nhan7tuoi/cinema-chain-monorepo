@@ -9,6 +9,7 @@ import { Loader2, Lock, Mail, ArrowRight, AlertCircle } from "lucide-react"
 import apiClient from "@/lib/axios"
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
+import toast from "react-hot-toast"
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,24 +30,25 @@ export function LoginForm() {
         const { accessToken, refreshToken, user } = response.data
 
         if (accessToken) {
-          // Save tokens and user info
           Cookies.set('access_token', accessToken, { expires: 1 }) // 1 day
           if (refreshToken) {
             Cookies.set('refresh_token', refreshToken, { expires: 7 }) // 7 days
           }
           Cookies.set('user_info', JSON.stringify(user), { expires: 1 })
           
-          // Navigate to dashboard
+          toast.success("Đăng nhập thành công!")
           router.push("/dashboard")
         }
       } else {
-        setError(response.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.")
+        const msg = response.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+        setError(msg)
+        toast.error(typeof msg === 'string' ? msg : msg[0] || "Đăng nhập thất bại!")
       }
     } catch (err: any) {
       console.error('Login error:', err)
-      setError(
-        err.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
-      )
+      const errorMsg = err.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+      setError(errorMsg)
+      toast.error(typeof errorMsg === 'string' ? errorMsg : errorMsg[0] || "Đăng nhập thất bại!")
     } finally {
       setIsLoading(false)
     }

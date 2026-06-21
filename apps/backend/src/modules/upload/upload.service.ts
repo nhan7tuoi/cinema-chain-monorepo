@@ -84,8 +84,6 @@ export class UploadService {
   async deleteFile(fileUrl: string) {
     if (!fileUrl) return;
     try {
-      // Ví dụ fileUrl: https://cinema-chain.s3.ap-southeast-1.amazonaws.com/avatars/123.png
-      // Cần lấy ra key là: avatars/123.png
       const urlObject = new URL(fileUrl);
       const objectKey = urlObject.pathname.substring(1); // bỏ dấu / ở đầu
 
@@ -97,7 +95,6 @@ export class UploadService {
       await this.s3Client.send(command);
     } catch (error) {
       console.error(`Failed to delete old file from S3: ${fileUrl}`, error);
-      // Không ném lỗi ra để tránh làm hỏng luồng update profile chính
     }
   }
 }

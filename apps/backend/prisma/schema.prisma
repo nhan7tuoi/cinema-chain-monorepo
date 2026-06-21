@@ -27,27 +27,27 @@ enum UserStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String?  @unique // Cho phép null để khách hàng đăng ký thuần bằng SĐT
-  phone     String?  @unique // SĐT định danh đăng nhập chính (Hệ thống tổng)
+  id        String     @id @default(uuid())
+  email     String?    @unique // Cho phép null để khách hàng đăng ký thuần bằng SĐT
+  phone     String?    @unique // SĐT định danh đăng nhập chính (Hệ thống tổng)
   password  String
   userType  UserType   @default(CUSTOMER) // Loại tài khoản cao nhất hoặc mặc định
   status    UserStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   // Mối quan hệ 1:1 song song. Một User có thể đồng thời có cả profile Customer và Employee
-  customer  Customer?
-  employee  Employee?
+  customer Customer?
+  employee Employee?
 
   @@map("users")
 }
 
 model Customer {
-  id        String    @id @default(uuid())
-  userId    String    @unique
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   fullName  String
   avatarUrl String?   @db.Text
   points    Int       @default(0)
@@ -59,22 +59,22 @@ model Customer {
 }
 
 model Employee {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   fullName  String
-  avatarUrl String?  @db.Text
-  code      String   @unique // Mã nhân viên nội bộ (Ví dụ: NV001, NV002...)
-  slug      String?  @db.VarChar(255)
-  
+  avatarUrl String? @db.Text
+  code      String  @unique // Mã nhân viên nội bộ (Ví dụ: NV001, NV002...)
+  slug      String? @db.VarChar(255)
+
   // Địa bàn làm việc của nhân viên tại cơ sở
-  branchId  String?
-  branch    Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
   // Vai trò của nhân viên trong hệ thống (Dynamic RBAC)
-  roleId    String?
-  role      Role?    @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  roleId String?
+  role   Role?   @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
   @@map("employees")
 }
@@ -86,12 +86,11 @@ model Employee {
 model Role {
   id          String   @id @default(uuid())
   code        String   @unique // Mã định danh hệ thống viết hoa (Ví dụ: "BRANCH_MANAGER")
-  name        String   // Tên hiển thị tiếng Việt (Ví dụ: "Quản Lý Chi Nhánh")
+  name        String // Tên hiển thị tiếng Việt (Ví dụ: "Quản Lý Chi Nhánh")
   description String?
   isSystem    Boolean  @default(false) // Chặn xóa nhầm các role cấu hình cứng hệ thống
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
 
   permissions RolePermission[]
   employees   Employee[]
@@ -99,16 +98,14 @@ model Role {
   @@map("roles")
 }
 
-
-
 model Permission {
-  id          String   @id @default(uuid())
-  name        String   @unique // Cấu trúc dạng "module:action" (Ví dụ: "movie:create")
-  displayName String   // Nhãn tiếng Việt để render lên FE (Ví dụ: "Thêm phim mới")
-  module      String   // Nhóm cha (Ví dụ: "Quản Lý Phim")
+  id          String  @id @default(uuid())
+  name        String  @unique // Cấu trúc dạng "module:action" (Ví dụ: "movie:create")
+  displayName String // Nhãn tiếng Việt để render lên FE (Ví dụ: "Thêm phim mới")
+  module      String // Nhóm cha (Ví dụ: "Quản Lý Phim")
   description String?
 
-  roles       RolePermission[]
+  roles RolePermission[]
 
   @@map("permissions")
 }
@@ -130,7 +127,7 @@ model RolePermission {
 
 model Branch {
   id        String   @id @default(uuid())
-  name      String   @unique 
+  name      String   @unique
   address   String
   phone     String?
   createdAt DateTime @default(now())
@@ -139,4 +136,34 @@ model Branch {
   employees Employee[]
 
   @@map("branches")
+}
+
+// =========================================================================
+// 4. PHÂN HỆ QUẢN LÝ PHIM (MOVIES)
+// =========================================================================
+
+enum MovieStatus {
+  NOW_SHOWING
+  COMING_SOON
+  ENDED
+}
+
+model Movie {
+  id          String      @id @default(uuid())
+  title       String
+  director    String?
+  cast        String?
+  genre       String?
+  duration    Int // Thời lượng (phút)
+  releaseDate DateTime
+  endDate     DateTime?
+  format      String      @default("2D")
+  synopsis    String?     @db.Text
+  posterUrl   String?     @db.Text
+  trailerUrl  String?     @db.Text
+  status      MovieStatus @default(COMING_SOON)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("movies")
 }

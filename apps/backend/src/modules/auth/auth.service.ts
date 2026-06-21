@@ -44,7 +44,6 @@ export class AuthService {
       }),
     ]);
 
-    // Save refresh token to Redis with TTL of 7 days
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
     await this.redisService.set(`refresh_token:${userId}`, hashedRefreshToken, 7 * 24 * 60 * 60);
 

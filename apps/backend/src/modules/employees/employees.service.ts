@@ -17,7 +17,13 @@ export class EmployeesService {
     const take = Number(limit);
     const searchSlug = search ? generateSlug(search) : undefined;
     
-    const where: any = {};
+    const where: any = {
+      user: {
+        userType: {
+          not: 'SUPER_ADMIN',
+        },
+      },
+    };
     if (searchSlug) {
       where.slug = {
         contains: searchSlug,
@@ -25,7 +31,7 @@ export class EmployeesService {
       };
     }
     if (status) {
-      where.user = { status };
+      where.user.status = status;
     }
     if (roleId) {
       where.roleId = roleId;
@@ -70,11 +76,9 @@ export class EmployeesService {
   async create(data: any) {
     const { email, password, fullName, roleId, branchId } = data;
     
-    // Auto-generate employee code (NV00001)
     let maxNumber = 0;
     
     return this.prisma.$transaction(async (tx) => {
-      // Lấy tất cả mã nhân viên để tìm số lớn nhất
       const employees = await tx.employee.findMany({
         select: { code: true }
       });
@@ -92,7 +96,6 @@ export class EmployeesService {
       let isUnique = false;
       let currentNumber = maxNumber + 1;
 
-      // Đảm bảo không trùng lặp do race condition cơ bản
       while (!isUnique) {
         code = `NV${String(currentNumber).padStart(5, '0')}`;
         const existing = await tx.employee.findUnique({ where: { code } });
@@ -103,7 +106,6 @@ export class EmployeesService {
         }
       }
 
-      // Hash password
       const hashedPassword = await bcrypt.hash(password || '123456', 10);
 
       const user = await tx.user.create({
@@ -121,6 +123,7 @@ export class EmployeesService {
           userId: user.id,
           fullName,
           code,
+          avatarUrl: data.avatarUrl || null,
           slug: generateSlug([fullName, code, email, data.phone].filter(Boolean).join(' ')),
           roleId: roleId || null,
           branchId: branchId || null,
@@ -142,6 +145,7 @@ export class EmployeesService {
       data: {
         fullName: data.fullName,
         code: data.code,
+        ...(data.avatarUrl !== undefined && { avatarUrl: data.avatarUrl }),
         slug: generateSlug([data.fullName, data.code, data.email, data.phone].filter(Boolean).join(' ')),
         roleId: data.roleId,
         branchId: data.branchId,
@@ -162,7 +166,6 @@ export class EmployeesService {
   }
 
   async remove(id: string) {
-    // Delete Employee and their User account
     const employee = await this.prisma.employee.findUnique({ where: { id } });
     if (employee) {
       await this.prisma.user.delete({

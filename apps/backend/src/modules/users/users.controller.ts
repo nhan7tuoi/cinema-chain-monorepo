@@ -3,12 +3,17 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiProperty } from '@nestjs/swagger';
+import { IsString, IsOptional } from 'class-validator';
 
 export class UpdateProfileDto {
   @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
   fullName?: string;
   
   @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
   avatarUrl?: string;
 }
 

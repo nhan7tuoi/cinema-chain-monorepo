@@ -33,6 +33,7 @@ export interface IAuthResponse {
     email: string | null;
     userType: string;
     fullName: string;
+    avatarUrl?: string | null;
     roles: string[];
     permissions: string[];
   };

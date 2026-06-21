@@ -10,6 +10,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { BranchesModule } from './modules/branches/branches.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { BranchesModule } from './modules/branches/branches.module';
     EmployeesModule,
     CustomersModule,
     BranchesModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

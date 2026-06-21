@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@cinema/types": "workspace:^",
+    "@radix-ui/react-avatar": "^1.2.0",
+    "@radix-ui/react-dialog": "^1.1.17",
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.18.0",
     "clsx": "^2.1.1",

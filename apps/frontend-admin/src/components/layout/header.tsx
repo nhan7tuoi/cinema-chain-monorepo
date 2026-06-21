@@ -4,6 +4,8 @@ import * as React from "react"
 import { useState, useRef, useEffect } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserCircle, Bell, LogOut, Settings, User } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ProfileDialog } from "./ProfileDialog"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
@@ -11,8 +13,19 @@ import apiClient from "@/lib/axios"
 
 export function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const userInfoCookie = Cookies.get("user_info")
+    if (userInfoCookie) {
+      try {
+        setUser(JSON.parse(userInfoCookie))
+      } catch (e) {}
+    }
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -60,27 +73,35 @@ export function Header() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50"
+              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50 rounded-full"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <UserCircle className="h-6 w-6" />
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.avatarUrl} className="object-cover" />
+                <AvatarFallback className="bg-slate-100 text-slate-500">
+                  {user?.fullName ? user.fullName.charAt(0).toUpperCase() : <UserCircle className="h-5 w-5" />}
+                </AvatarFallback>
+              </Avatar>
             </Button>
 
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-slate-900 ring-1 ring-black ring-opacity-5 dark:ring-slate-800 border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 focus:outline-none animate-in fade-in zoom-in-95 duration-200">
                 <div className="px-4 py-3">
-                  <p className="text-sm">Signed in as</p>
+                  <p className="text-sm">Đăng nhập với tên</p>
                   <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                    Admin
+                    {user?.fullName || "Admin"}
                   </p>
                 </div>
                 <div className="py-1">
                   <button
                     className="group flex items-center w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    onClick={() => setIsDropdownOpen(false)}
+                    onClick={() => {
+                      setIsDropdownOpen(false)
+                      setIsProfileOpen(true)
+                    }}
                   >
                     <User className="mr-3 h-4 w-4 text-slate-400 group-hover:text-slate-500 dark:text-slate-500 dark:group-hover:text-slate-400" />
-                    Profile
+                    Hồ sơ (Profile)
                   </button>
                   <button
                     className="group flex items-center w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -104,6 +125,20 @@ export function Header() {
           </div>
         </div>
       </div>
+      
+      <ProfileDialog 
+        isOpen={isProfileOpen} 
+        onOpenChange={setIsProfileOpen} 
+        user={user} 
+        onProfileUpdated={() => {
+          const userInfoCookie = Cookies.get("user_info")
+          if (userInfoCookie) {
+            try {
+              setUser(JSON.parse(userInfoCookie))
+            } catch (e) {}
+          }
+        }}
+      />
     </header>
   )
 }

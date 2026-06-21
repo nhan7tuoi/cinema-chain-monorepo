@@ -120,11 +120,10 @@ export default function RolePermissionsPage() {
     setIsLoadingRole(true)
     try {
       const res = await apiClient.get(`/roles/${role.id}`)
-      if (res.data?.status === 'success') {
-        const roleData = res.data.data
+      if (res.data?.status === 'success' || res.status === 200) {
+        const roleData = res.data
         
-        // Extract permission IDs from the role's permissions
-        const permIds = roleData.permissions.map((rp: any) => rp.permissionId)
+        const permIds = roleData?.permissions?.map((rp: any) => rp.permissionId) || []
         setSelectedRolePermIds(permIds)
       }
     } catch (error) {

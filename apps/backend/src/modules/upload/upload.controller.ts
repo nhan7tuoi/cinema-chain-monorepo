@@ -17,7 +17,7 @@ export class GeneratePresignedUrlDto {
 @ApiTags('Upload')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('upload')
+@Controller('admin/upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 

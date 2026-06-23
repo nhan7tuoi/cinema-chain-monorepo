@@ -36,6 +36,8 @@ export interface IAuthResponse {
     avatarUrl?: string | null;
     roles: string[];
     permissions: string[];
+    branchId?: string | null;
+    branchName?: string | null;
   };
 }
 
@@ -47,10 +49,14 @@ export interface IJwtPayload {
   sub: string;
   email: string | null;
   userType: string;
+  branchId?: string | null;
+  branchName?: string | null;
 }
 
 export interface IUserContext {
   userId: string;
   email: string | null;
   userType: string;
+  branchId?: string | null;
+  branchName?: string | null;
 }

@@ -5,12 +5,12 @@ import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, Plus, Star } from "lucide-react"
-import Cookies from "js-cookie"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import apiClient from "@/lib/axios"
 
 export default function CustomersPage() {
-  const [permissions, setPermissions] = useState<string[]>([])
+  const { hasPermission } = usePermissions()
   const [data, setData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -19,21 +19,11 @@ export default function CustomersPage() {
   const [totalItems, setTotalItems] = useState(0)
 
   useEffect(() => {
-    try {
-      const userInfoStr = Cookies.get("user_info")
-      if (userInfoStr) {
-        const user = JSON.parse(userInfoStr)
-        if (user && user.permissions) setPermissions(user.permissions)
-      }
-    } catch (e) {
-      console.error(e)
-    }
-
     const fetchCustomers = async () => {
       try {
         const res = await apiClient.get(`/customers?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`)
-        if (res.data?.status === 'success') {
-          const transformed = res.data.data.map((cus: any) => ({
+        if (res.status === true) {
+          const transformed = res.data.map((cus: any) => ({
             id: cus.id,
             fullName: cus.fullName,
             email: cus.user?.email || "N/A",
@@ -43,8 +33,8 @@ export default function CustomersPage() {
             status: cus.user?.status === 'ACTIVE' ? "Hoạt động" : cus.user?.status === 'LOCKED' ? "Khóa" : "Đã Ẩn",
           }))
           setData(transformed)
-          setPageCount(res.data.meta.pageCount)
-          setTotalItems(res.data.meta.itemCount)
+          setPageCount(res.meta?.pageCount || 0)
+          setTotalItems(res.meta?.itemCount || 0)
         }
       } catch (error) {
         console.error("Failed to fetch customers", error)
@@ -56,9 +46,9 @@ export default function CustomersPage() {
     fetchCustomers()
   }, [pagination.pageIndex, pagination.pageSize])
 
-  const canCreate = permissions.includes("user:create")
-  const canUpdate = permissions.includes("user:update")
-  const canDelete = permissions.includes("user:delete")
+  const canCreate = hasPermission("user:create")
+  const canUpdate = hasPermission("user:update")
+  const canDelete = hasPermission("user:delete")
 
   const columns: ColumnDef<any>[] = [
     {
@@ -135,7 +125,7 @@ export default function CustomersPage() {
     <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent">
+         <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
             Khách Hàng
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
@@ -162,6 +152,7 @@ export default function CustomersPage() {
         totalItems={totalItems}
         pagination={pagination}
         onPaginationChange={setPagination}
+        isLoading={isLoading}
       />
     </div>
   )

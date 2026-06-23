@@ -10,8 +10,4 @@ export class EmployeePageOptionsDto extends PageOptionsDto {
   @IsString()
   @IsOptional()
   readonly roleId?: string;
-
-  @IsString()
-  @IsOptional()
-  readonly branchId?: string;
 }

@@ -26,8 +26,9 @@ export function LoginForm() {
     try {
       const response = await apiClient.post('/auth/login', { email, password })
       
-      if (response.data?.status === 'success') {
-        const { accessToken, refreshToken, user } = response.data
+      if (response.status === true) {
+        const responseData:any = response;
+        const { accessToken, refreshToken, user } = responseData;
 
         if (accessToken) {
           Cookies.set('access_token', accessToken, { expires: 1 }) // 1 day
@@ -40,7 +41,7 @@ export function LoginForm() {
           router.push("/dashboard")
         }
       } else {
-        const msg = response.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+        const msg = response.message || response.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
         setError(msg)
         toast.error(typeof msg === 'string' ? msg : msg[0] || "Đăng nhập thất bại!")
       }

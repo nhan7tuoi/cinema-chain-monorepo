@@ -1,13 +1,32 @@
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from 'axios';
 import Cookies from 'js-cookie';
 
-const apiClient: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+export interface ApiResponse<T = any> {
+  status: boolean;
+  statusCode: number;
+  data: T;
+  message?: string;
+  meta?: any;
+}
+
+export interface CustomAxiosInstance extends Omit<AxiosInstance, 'get' | 'post' | 'put' | 'patch' | 'delete'> {
+  <T = any, R = ApiResponse<T>, D = any>(config: AxiosRequestConfig<D>): Promise<R>;
+  <T = any, R = ApiResponse<T>, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R>;
+
+  get<T = any, R = ApiResponse<T>, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R>;
+  post<T = any, R = ApiResponse<T>, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<R>;
+  put<T = any, R = ApiResponse<T>, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<R>;
+  patch<T = any, R = ApiResponse<T>, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<R>;
+  delete<T = any, R = ApiResponse<T>, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R>;
+}
+
+const apiClient = axios.create({
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/admin`,
   timeout: 10000, // 10 giây
   headers: {
     'Content-Type': 'application/json',
   },
-});
+}) as CustomAxiosInstance;
 
 let isRefreshing = false;
 let failedQueue: { resolve: (token: string) => void; reject: (error: any) => void }[] = [];
@@ -30,6 +49,16 @@ apiClient.interceptors.request.use(
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+
+      const userInfoStr = Cookies.get('user_info');
+      if (userInfoStr && config.headers) {
+        try {
+          const userInfo = JSON.parse(userInfoStr);
+          if (userInfo.branchId) {
+            config.headers['x-branch-id'] = userInfo.branchId;
+          }
+        } catch (e) {}
+      }
     }
     return config;
   },
@@ -40,7 +69,7 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    return response;
+    return response.data;
   },
   async (error: AxiosError) => {
     if (error.response) {
@@ -82,7 +111,7 @@ apiClient.interceptors.response.use(
                throw new Error('No refresh token available');
             }
 
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/auth/refresh`, {}, {
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/admin/auth/refresh`, {}, {
               headers: { Authorization: `Bearer ${refreshToken}` }
             });
 

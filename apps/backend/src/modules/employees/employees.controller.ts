@@ -3,7 +3,7 @@ import { EmployeesService } from './employees.service';
 import { EmployeePageOptionsDto } from './dto/employee-page-options.dto';
 import { Prisma } from '.prisma/generated';
 
-@Controller('employees')
+@Controller('admin/employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
@@ -19,7 +19,7 @@ export class EmployeesController {
 
   @Put(':id')
   update(@Param('id') id: string, @Body() data: any) {
-    console.log("UPDATE DATA:", data); return this.employeesService.update(id, data);
+    return this.employeesService.update(id, data);
   }
 
   @Delete(':id')

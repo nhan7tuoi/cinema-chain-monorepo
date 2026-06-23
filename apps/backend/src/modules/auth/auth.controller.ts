@@ -9,7 +9,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { Request } from 'express';
 
 @ApiTags('Auth')
-@Controller('auth')
+@Controller('admin/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 

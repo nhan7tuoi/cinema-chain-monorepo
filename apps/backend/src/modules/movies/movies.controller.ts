@@ -8,7 +8,7 @@ import { PermissionGuard } from '../../common/guards/permission.guard';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 
 @ApiTags('Movies')
-@Controller('movies')
+@Controller('admin/movies')
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 

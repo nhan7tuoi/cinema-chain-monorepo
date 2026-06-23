@@ -18,7 +18,7 @@ export class UpdateProfileDto {
 }
 
 @ApiTags('Users')
-@Controller('users')
+@Controller('admin/users')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class UsersController {

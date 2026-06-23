@@ -17,8 +17,10 @@ export function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const userInfoCookie = Cookies.get("user_info")
     if (userInfoCookie) {
       try {
@@ -62,6 +64,11 @@ export function Header() {
           <div className="font-bold text-xl tracking-tight text-red-600 dark:text-red-500 hidden sm:block">
             Cinema Chain
           </div>
+          {mounted && user?.branchName && (
+            <div className="text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full hidden sm:block">
+              📍 {user.branchName}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50">
@@ -79,7 +86,7 @@ export function Header() {
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user?.avatarUrl} className="object-cover" />
                 <AvatarFallback className="bg-slate-100 text-slate-500">
-                  {user?.fullName ? user.fullName.charAt(0).toUpperCase() : <UserCircle className="h-5 w-5" />}
+                  {mounted && user?.fullName ? user.fullName.charAt(0).toUpperCase() : <UserCircle className="h-5 w-5" />}
                 </AvatarFallback>
               </Avatar>
             </Button>

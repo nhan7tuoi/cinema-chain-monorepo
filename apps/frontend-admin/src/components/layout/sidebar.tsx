@@ -21,34 +21,30 @@ import { Button } from "@/components/ui/button"
 
 import { useSidebar } from "@/components/layout/sidebar-provider"
 import { NAVIGATION_CONFIG, NavItem } from "@/config/navigation"
-import Cookies from "js-cookie"
+import { usePermissions } from "@/hooks/usePermissions"
 
 export function Sidebar() {
   const pathname = usePathname()
   const { isCollapsed } = useSidebar()
-  const [userPermissions, setUserPermissions] = React.useState<string[]>([])
+  const { permissions: userPermissions, userType } = usePermissions()
   const [expandedMenus, setExpandedMenus] = React.useState<Record<string, boolean>>({})
+  const [mounted, setMounted] = React.useState(false)
 
- React.useEffect(() => {
-    try {
-      const userInfoStr = Cookies.get("user_info")
-      if (userInfoStr) {
-        const user = JSON.parse(userInfoStr)
-        if (user && user.permissions && Array.isArray(user.permissions)) {
-          setUserPermissions(user.permissions)
-        }
-      }
-    } catch (e) {
-      console.error("Failed to parse user info from cookies", e)
-    }
+  React.useEffect(() => {
+    setMounted(true)
+
   }, [])
 
   const filteredNavItems = React.useMemo(() => {
+    if (!mounted) return NAVIGATION_CONFIG // Tránh hydration mismatch bằng cách render full menu hoặc rỗng trên server
     return NAVIGATION_CONFIG.filter((item) => {
+      if (item.title === "Cinemas" && userType !== "ADMIN" && userType !== "SUPER_ADMIN") {
+        return false
+      }
       if (!item.permissions || item.permissions.length === 0) return true
       return item.permissions.some(permission => userPermissions.includes(permission))
     })
-  }, [userPermissions])
+  }, [userPermissions, userType])
 
   const toggleMenu = (title: string) => {
     if (isCollapsed) return

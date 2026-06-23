@@ -11,6 +11,6 @@ export const ROUTE_PERMISSIONS: RoutePermissionConfig[] = [
   { path: "/bookings", permissions: ["ticket:read"] },
   { path: "/users", permissions: ["employee:read", "role:read", "customer:read"] },
   { path: "/users/employees", permissions: ["employee:read"] },
-  { path: "/users/customers", permissions: ["customer:read"] },
+  { path: "/users/customers", permissions: ["employee:read"] },
   { path: "/settings", permissions: [] },
 ]

@@ -37,6 +37,7 @@ interface DataTableProps<TData, TValue> {
   pagination?: PaginationState
   onPaginationChange?: OnChangeFn<PaginationState>
   totalItems?: number
+  isLoading?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -49,6 +50,7 @@ export function DataTable<TData, TValue>({
   pagination,
   onPaginationChange,
   totalItems,
+  isLoading,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -110,7 +112,17 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={`skeleton-row-${i}`} className="border-slate-200 dark:border-slate-800 hover:bg-transparent">
+                  {columns.map((col, j) => (
+                    <TableCell key={`skeleton-col-${i}-${j}`} className="py-4">
+                      <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

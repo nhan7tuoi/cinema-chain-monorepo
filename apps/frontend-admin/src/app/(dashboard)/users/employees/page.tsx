@@ -5,7 +5,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, Plus, ShieldCheck } from "lucide-react"
-import Cookies from "js-cookie"
+import { usePermissions } from "@/hooks/usePermissions"
 import toast from "react-hot-toast"
 
 import apiClient from "@/lib/axios"
@@ -13,7 +13,7 @@ import { EmployeeModal } from "./components/employee-modal"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function EmployeesPage() {
-  const [permissions, setPermissions] = useState<string[]>([])
+  const { hasPermission } = usePermissions()
   const [data, setData] = useState<any[]>([])
   const [roles, setRoles] = useState<any[]>([])
   const [branches, setBranches] = useState<any[]>([])
@@ -30,8 +30,8 @@ export default function EmployeesPage() {
     setIsLoading(true)
     try {
       const res = await apiClient.get(`/employees?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`)
-      if (res.data?.status === 'success') {
-        const transformed = res.data.data.map((emp: any) => ({
+      if (res.status === true) {
+        const transformed = res.data.map((emp: any) => ({
           id: emp.id,
           code: emp.code,
           avatarUrl: emp.avatarUrl || null,
@@ -45,8 +45,8 @@ export default function EmployeesPage() {
           status: emp.user?.status === 'ACTIVE' ? "Hoạt động" : emp.user?.status === 'LOCKED' ? "Khóa" : "Đã Ẩn",
         }))
         setData(transformed)
-        setPageCount(res.data.meta.pageCount)
-        setTotalItems(res.data.meta.itemCount)
+        setPageCount(res.meta?.pageCount || 0)
+        setTotalItems(res.meta?.itemCount || 0)
       }
     } catch (error) {
       console.error("Failed to fetch employees", error)
@@ -56,27 +56,17 @@ export default function EmployeesPage() {
   }
 
   useEffect(() => {
-    try {
-      const userInfoStr = Cookies.get("user_info")
-      if (userInfoStr) {
-        const user = JSON.parse(userInfoStr)
-        if (user && user.permissions) setPermissions(user.permissions)
-      }
-    } catch (e) {
-      console.error(e)
-    }
-
     const fetchRolesAndBranches = async () => {
       try {
         const [rolesRes, branchesRes] = await Promise.all([
           apiClient.get("/roles"),
           apiClient.get("/branches")
         ])
-        if (rolesRes.data?.status === 'success') {
-          setRoles(rolesRes.data.data)
+        if (rolesRes.status === true) {
+          setRoles(rolesRes.data)
         }
-        if (branchesRes.data?.status === 'success') {
-          setBranches(branchesRes.data.data)
+        if (branchesRes.status === true) {
+          setBranches(branchesRes.data)
         }
       } catch (error) {
         console.error("Failed to fetch roles/branches", error)
@@ -90,9 +80,9 @@ export default function EmployeesPage() {
     fetchEmployees()
   }, [pagination.pageIndex, pagination.pageSize])
 
-  const canCreate = permissions.includes("employee:create")
-  const canUpdate = permissions.includes("employee:update")
-  const canDelete = permissions.includes("employee:delete")
+  const canCreate = hasPermission("employee:create")
+  const canUpdate = hasPermission("employee:update")
+  const canDelete = hasPermission("employee:delete")
 
   const handleSave = async (formData: any) => {
     try {
@@ -155,10 +145,6 @@ export default function EmployeesPage() {
       accessorKey: "email",
       header: "Email",
     },
-    // {
-    //   accessorKey: "phone",
-    //   header: "Số Điện Thoại",
-    // },
     {
       accessorKey: "role",
       header: "Vai Trò",
@@ -267,6 +253,7 @@ export default function EmployeesPage() {
         pagination={pagination}
         onPaginationChange={setPagination}
         totalItems={totalItems}
+        isLoading={isLoading}
       />
 
       <EmployeeModal 

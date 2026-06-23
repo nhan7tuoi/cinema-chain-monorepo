@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export interface Response<T> {
-  status: number | string;
+  status: boolean;
   data?: T;
   [key: string]: any;
 }
@@ -15,7 +15,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
     const response = ctx.getResponse();
     const statusCode = response.statusCode;
 
-    const statusVal = statusCode >= 200 && statusCode < 300 ? 'success' : 'error';
+    const statusVal = statusCode >= 200 && statusCode < 300;
 
     return next.handle().pipe(
       map(data => {
@@ -27,10 +27,18 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
           return { status: statusVal, statusCode, data };
         }
 
+        if (data && ('data' in data || 'meta' in data || 'accessToken' in data)) {
+          return {
+            status: statusVal,
+            statusCode,
+            ...data,
+          };
+        }
+
         return {
           status: statusVal,
           statusCode,
-          ...data,
+          data,
         };
       }),
     );

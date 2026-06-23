@@ -31,8 +31,8 @@ export class AuthService {
     return null;
   }
 
-  private async getTokens(userId: string, email: string | null, userType: string) {
-    const payload: IJwtPayload = { sub: userId, email, userType };
+  private async getTokens(userId: string, email: string | null, userType: string, branchId?: string | null, branchName?: string | null) {
+    const payload: IJwtPayload = { sub: userId, email, userType, branchId, branchName };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_SECRET') || 'FALLBACK_KEY',
@@ -56,7 +56,9 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
     }
 
-    const tokens = await this.getTokens(user.id, user.email, user.userType);
+    const branchId = user.employee?.branch?.id || null;
+    const branchName = user.employee?.branch?.name || null;
+    const tokens = await this.getTokens(user.id, user.email, user.userType, branchId, branchName);
     
     const role = await this.prisma.role.findUnique({
       where: { code: user.userType },
@@ -80,6 +82,8 @@ export class AuthService {
         avatarUrl: user.employee?.avatarUrl || user.customer?.avatarUrl || null,
         roles,
         permissions,
+        branchId,
+        branchName,
       },
     };
   }
@@ -112,7 +116,7 @@ export class AuthService {
       return user;
     });
 
-    const tokens = await this.getTokens(newUser.id, newUser.email, newUser.userType);
+    const tokens = await this.getTokens(newUser.id, newUser.email, newUser.userType, null, null);
     return {
       ...tokens,
       user: {
@@ -143,7 +147,9 @@ export class AuthService {
       throw new UnauthorizedException('Token không hợp lệ');
     }
 
-    const tokens = await this.getTokens(user.id, user.email, user.userType);
+    const branchId = user.employee?.branch?.id || null;
+    const branchName = user.employee?.branch?.name || null;
+    const tokens = await this.getTokens(user.id, user.email, user.userType, branchId, branchName);
     return tokens;
   }
 

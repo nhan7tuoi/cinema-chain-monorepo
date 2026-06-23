@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/
 import { CustomersService } from './customers.service';
 import { CustomerPageOptionsDto } from './dto/customer-page-options.dto';
 
-@Controller('customers')
+@Controller('admin/customers')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 

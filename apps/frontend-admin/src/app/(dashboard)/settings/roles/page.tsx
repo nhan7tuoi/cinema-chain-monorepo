@@ -81,9 +81,9 @@ export default function RolePermissionsPage() {
           apiClient.get<any>('/roles/permissions')
         ])
 
-        if (rolesRes.data?.status === 'success' && permsRes.data?.status === 'success') {
-          const rolesData = rolesRes.data.data;
-          const permsData = permsRes.data.data;
+        if (rolesRes.status === true && permsRes.status === true) {
+          const rolesData = rolesRes.data;
+          const permsData = permsRes.data;
           
           setRoles(rolesData)
           setPermissions(permsData)
@@ -115,7 +115,7 @@ export default function RolePermissionsPage() {
     setIsLoadingRole(true)
     try {
       const res = await apiClient.get(`/roles/${role.id}`)
-      if (res.data?.status === 'success' || res.status === 200) {
+      if (res.status === true || res.statusCode === 200) {
         const roleData = res.data
         
         const permIds = roleData?.permissions?.map((rp: any) => rp.permissionId) || []

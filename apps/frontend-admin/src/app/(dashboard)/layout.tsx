@@ -10,7 +10,7 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-slate-50 flex flex-col">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 flex flex-col">
         <Header />
         <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
           <Sidebar />

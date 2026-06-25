@@ -10,6 +10,6 @@ export default defineConfig({
     seed: 'ts-node ./prisma/seed.ts',
   },
   datasource: {
-    url: "postgresql://phamducnhan:ServBay.dev@localhost:5432/cinema_dev?schema=public",
+    url: "postgresql://postgres:root@localhost:5432/cinema_dev?schema=public",
   },
 });

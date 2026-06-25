@@ -75,7 +75,7 @@ export function Sidebar() {
   return (
     <aside 
       className={cn(
-        "border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-black hidden md:flex flex-col transition-all duration-300 ease-in-out",
+        "border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hidden md:flex flex-col transition-all duration-300 ease-in-out",
         isCollapsed ? "w-20" : "w-64"
       )}
     >

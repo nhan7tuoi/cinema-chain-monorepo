@@ -58,7 +58,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-black/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-4">
           <div className="font-bold text-xl tracking-tight text-red-600 dark:text-red-500 hidden sm:block">

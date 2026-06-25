@@ -7,18 +7,20 @@ import {
   Ticket,
   Settings,
   ShieldAlert,
+  Monitor,
+  type LucideIcon,
 } from "lucide-react"
 import { ROUTE_PERMISSIONS } from "./roles"
 
 export interface NavItem {
   title: string
   href?: string
-  icon: any
+  icon: LucideIcon
   permissions: string[]
   subItems?: {
     title: string
     href: string
-    icon?: any
+    icon?: LucideIcon
     permissions: string[]
   }[]
 }
@@ -47,6 +49,12 @@ export const NAVIGATION_CONFIG: NavItem[] = [
     href: "/cinemas",
     icon: MapPin,
     permissions: getPermissionsForPath("/cinemas"),
+  },
+  {
+    title: "Auditoriums",
+    href: "/auditoriums",
+    icon: Monitor,
+    permissions: getPermissionsForPath("/auditoriums"),
   },
   {
     title: "Showtimes",

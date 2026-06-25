@@ -13,6 +13,9 @@ import { BranchesModule } from './modules/branches/branches.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { MoviesModule } from './modules/movies/movies.module';
 import { BullModule } from '@nestjs/bullmq';
+import { AuditoriumModule } from './modules/auditorium/auditorium.module';
+import { ShowtimeModule } from './modules/showtime/showtime.module';
+import { SeatModule } from './modules/seat/seat.module';
 
 @Module({
   imports: [
@@ -40,8 +43,11 @@ import { BullModule } from '@nestjs/bullmq';
     BranchesModule,
     UploadModule,
     MoviesModule,
+    AuditoriumModule,
+    SeatModule,
+    ShowtimeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

@@ -1,4 +1,4 @@
-import { PrismaClient, UserType, UserStatus } from '.prisma/generated';
+import { PrismaClient, UserType, UserStatus, MovieStatus, SeatStatus, SeatType } from '.prisma/generated';
 import * as bcrypt from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -6,6 +6,46 @@ import { Pool } from 'pg';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+
+function buildSeedSeats(rowCount: number, colCount: number) {
+  const seats: {
+    rowLabel: string;
+    number: number;
+    code: string;
+    gridRow: number;
+    gridCol: number;
+    type: SeatType;
+    status: SeatStatus;
+    couplePairId?: string;
+  }[] = [];
+
+  for (let row = 0; row < rowCount; row++) {
+    const rowLabel = String.fromCharCode(65 + row);
+    const isCoupleRow = row === rowCount - 1 && colCount >= 8;
+
+    for (let col = 1; col <= colCount; col++) {
+      if (!isCoupleRow && colCount >= 12 && (col === Math.ceil(colCount / 3) || col === Math.ceil((colCount / 3) * 2))) {
+        continue;
+      }
+
+      const isVip = !isCoupleRow && row >= Math.max(rowCount - 3, 0);
+      const couplePairId = isCoupleRow ? `couple-${rowLabel}-${Math.ceil(col / 2)}` : undefined;
+
+      seats.push({
+        rowLabel,
+        number: col,
+        code: `${rowLabel}${col}`,
+        gridRow: row,
+        gridCol: col,
+        type: isCoupleRow ? SeatType.COUPLE : isVip ? SeatType.VIP : SeatType.STANDARD,
+        status: SeatStatus.ACTIVE,
+        couplePairId,
+      });
+    }
+  }
+
+  return seats;
+}
 
 async function main() {
   console.log('🌱 Khởi động tiến trình nạp dữ liệu mẫu RBAC nâng cao...');
@@ -143,6 +183,133 @@ async function main() {
       phone: '0281234567',
     },
   });
+
+  // =========================================================================
+  // 3b. DU LIEU MAU CHO PHONG CHIEU VA PHIM
+  // =========================================================================
+  console.log('👉 Đang tạo dữ liệu mẫu phòng chiếu và phim...');
+
+  const auditoriumSeeds = [
+    { name: 'Phòng 01', format: 'IMAX Laser', layoutRows: 7, layoutCols: 14 },
+    { name: 'Phòng 02', format: 'Dolby Cinema', layoutRows: 7, layoutCols: 12 },
+    { name: 'Phòng 03', format: 'Standard 4K', layoutRows: 6, layoutCols: 12 },
+    { name: 'Phòng 04', format: 'VIP Suites', layoutRows: 5, layoutCols: 10 },
+    { name: 'Phòng 05', format: 'ScreenX', layoutRows: 8, layoutCols: 16 },
+  ];
+
+  for (const auditorium of auditoriumSeeds) {
+    const seats = buildSeedSeats(auditorium.layoutRows, auditorium.layoutCols);
+    const savedAuditorium = await prisma.auditorium.upsert({
+      where: {
+        branchId_name: {
+          branchId: defaultBranch.id,
+          name: auditorium.name,
+        },
+      },
+      update: {
+        format: auditorium.format,
+        capacity: seats.filter((seat) => seat.status === SeatStatus.ACTIVE).length,
+        layoutRows: auditorium.layoutRows,
+        layoutCols: auditorium.layoutCols,
+        isActive: true,
+      },
+      create: {
+        branchId: defaultBranch.id,
+        ...auditorium,
+        capacity: seats.filter((seat) => seat.status === SeatStatus.ACTIVE).length,
+        isActive: true,
+      },
+    });
+
+    await prisma.seat.deleteMany({ where: { auditoriumId: savedAuditorium.id } });
+    await prisma.seat.createMany({
+      data: seats.map((seat) => ({
+        ...seat,
+        auditoriumId: savedAuditorium.id,
+      })),
+    });
+  }
+
+  const movieSeeds = [
+    {
+      title: 'Dune: Part Two',
+      director: 'Denis Villeneuve',
+      cast: 'Timothee Chalamet, Zendaya, Rebecca Ferguson',
+      genre: 'Science Fiction, Adventure',
+      duration: 166,
+      releaseDate: new Date('2026-06-01'),
+      endDate: new Date('2026-08-31'),
+      format: 'IMAX',
+      synopsis: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.',
+      status: MovieStatus.NOW_SHOWING,
+    },
+    {
+      title: 'Inside Out 2',
+      director: 'Kelsey Mann',
+      cast: 'Amy Poehler, Maya Hawke, Kensington Tallman',
+      genre: 'Animation, Family',
+      duration: 96,
+      releaseDate: new Date('2026-06-05'),
+      endDate: new Date('2026-08-15'),
+      format: '2D',
+      synopsis: 'Riley enters her teenage years and meets new emotions inside her mind.',
+      status: MovieStatus.NOW_SHOWING,
+    },
+    {
+      title: 'Oppenheimer',
+      director: 'Christopher Nolan',
+      cast: 'Cillian Murphy, Emily Blunt, Robert Downey Jr.',
+      genre: 'Biography, Drama',
+      duration: 180,
+      releaseDate: new Date('2026-06-10'),
+      endDate: new Date('2026-08-20'),
+      format: 'IMAX',
+      synopsis: 'The story of J. Robert Oppenheimer and the creation of the atomic bomb.',
+      status: MovieStatus.NOW_SHOWING,
+    },
+    {
+      title: 'Kung Fu Panda 4',
+      director: 'Mike Mitchell',
+      cast: 'Jack Black, Awkwafina, Viola Davis',
+      genre: 'Animation, Action',
+      duration: 94,
+      releaseDate: new Date('2026-06-12'),
+      endDate: new Date('2026-08-10'),
+      format: '2D',
+      synopsis: 'Po must train a new warrior when he is chosen to become the spiritual leader of the Valley of Peace.',
+      status: MovieStatus.NOW_SHOWING,
+    },
+    {
+      title: 'Mission: Impossible - Dead Reckoning',
+      director: 'Christopher McQuarrie',
+      cast: 'Tom Cruise, Hayley Atwell, Ving Rhames',
+      genre: 'Action, Thriller',
+      duration: 163,
+      releaseDate: new Date('2026-06-20'),
+      endDate: new Date('2026-09-05'),
+      format: 'ScreenX',
+      synopsis: 'Ethan Hunt and his IMF team face a dangerous weapon that threatens the world.',
+      status: MovieStatus.NOW_SHOWING,
+    },
+  ];
+
+  for (const movie of movieSeeds) {
+    const existingMovie = await prisma.movie.findFirst({
+      where: { title: movie.title },
+      select: { id: true },
+    });
+
+    if (existingMovie) {
+      await prisma.movie.update({
+        where: { id: existingMovie.id },
+        data: movie,
+      });
+    } else {
+      await prisma.movie.create({
+        data: movie,
+      });
+    }
+  }
 
   const hashPassword = await bcrypt.hash('Admin@2026', 10);
 

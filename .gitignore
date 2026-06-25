@@ -15,3 +15,4 @@ out
 #Ẩn log của hệ thống
 *.log
 .turbo
+*.md

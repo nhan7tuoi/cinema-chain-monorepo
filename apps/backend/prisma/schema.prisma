@@ -134,7 +134,9 @@ model Branch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  employees Employee[]
+  employees   Employee[]
+  auditoriums Auditorium[]
+  showtimes   Showtime[]
 
   @@map("branches")
 }
@@ -166,5 +168,95 @@ model Movie {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
+  showtimes Showtime[]
+
   @@map("movies")
+}
+
+model Auditorium {
+  id       String @id @default(uuid())
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  name       String
+  format     String   @default("2D")
+  capacity   Int      @default(0)
+  isActive   Boolean  @default(true)
+  layoutRows Int      @default(0)
+  layoutCols Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  showtimes Showtime[]
+  seats     Seat[]
+
+  @@unique([branchId, name])
+  @@map("auditoriums")
+}
+
+// 
+enum ShowtimeStatus {
+  SCHEDULED
+  SELLING
+  SOLD_OUT
+  CANCELLED
+  FINISHED
+}
+
+model Showtime {
+  id       String @id @default(uuid())
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  auditoriumId String
+  auditorium   Auditorium @relation(fields: [auditoriumId], references: [id], onDelete: Restrict)
+
+  movieId String
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Restrict)
+
+  startsAt  DateTime
+  endsAt    DateTime
+  status    ShowtimeStatus @default(SCHEDULED)
+  basePrice Decimal        @db.Decimal(12, 2)
+  note      String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([branchId, startsAt])
+  @@index([auditoriumId, startsAt])
+  @@map("showtimes")
+}
+enum SeatType {
+  STANDARD
+  VIP
+  COUPLE
+}
+
+enum SeatStatus {
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+}
+
+model Seat {
+  id           String      @id @default(uuid())
+  auditoriumId String
+  auditorium   Auditorium @relation(fields: [auditoriumId], references: [id], onDelete: Cascade)
+
+  rowLabel     String
+  number       Int
+  code         String
+  gridRow      Int
+  gridCol      Int
+  type         SeatType   @default(STANDARD)
+  status       SeatStatus @default(ACTIVE)
+  couplePairId String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([auditoriumId, code])
+  @@unique([auditoriumId, gridRow, gridCol])
+  @@index([auditoriumId, rowLabel])
+  @@index([auditoriumId, couplePairId])
+  @@map("seats")
 }

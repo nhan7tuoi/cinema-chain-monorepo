@@ -34,6 +34,33 @@ export class MoviesService {
     });
   }
 
+  async findAllClient(query: { page?: number; limit?: number; status?: MovieStatus }) {
+    const { page = 1, limit = 10, status } = query;
+    const skip = (page - 1) * limit;
+
+    const where = status ? { status } : {};
+
+    const [data, total] = await Promise.all([
+      this.prisma.movie.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { releaseDate: 'desc' }, // Sort by release date for client
+      }),
+      this.prisma.movie.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async findOne(id: string) {
     return this.prisma.movie.findUnique({
       where: { id },

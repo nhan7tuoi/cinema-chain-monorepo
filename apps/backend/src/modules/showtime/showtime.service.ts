@@ -196,19 +196,21 @@ export class ShowtimeService {
         }
 
         if (filters?.dateFrom && filters?.dateTo) {
-            const start = new Date(`${filters.dateFrom}T00:00:00.000Z`);
-            const end = new Date(`${filters.dateTo}T23:59:59.999Z`);
-            where.startsAt = {
-                gte: start,
-                lte: end,
-            };
+            const start = new Date(`${filters.dateFrom}T00:00:00+07:00`);
+            const end = new Date(`${filters.dateTo}T00:00:00+07:00`);
+            end.setUTCDate(end.getUTCDate() + 1);
+            where.AND = [
+                { startsAt: { lt: end } },
+                { endsAt: { gt: start } },
+            ];
         } else if (filters?.date) {
-            const start = new Date(`${filters.date}T00:00:00.000Z`);
-            const end = new Date(`${filters.date}T23:59:59.999Z`);
-            where.startsAt = {
-                gte: start,
-                lte: end,
-            };
+            const start = new Date(`${filters.date}T00:00:00+07:00`);
+            const end = new Date(start);
+            end.setUTCDate(end.getUTCDate() + 1);
+            where.AND = [
+                { startsAt: { lt: end } },
+                { endsAt: { gt: start } },
+            ];
         }
 
         return this.prisma.showtime.findMany({
@@ -365,6 +367,19 @@ export class ShowtimeService {
 
     /** Xoa mot suat chieu theo id. */
     async delete(id: string) {
+        const showtime = await this.prisma.showtime.findUnique({
+            where: { id },
+            select: { startsAt: true },
+        });
+
+        if (!showtime) {
+            throw new NotFoundException('Showtime not found');
+        }
+
+        if (showtime.startsAt <= new Date()) {
+            throw new BadRequestException('Cannot delete a showtime that has already started.');
+        }
+
         return this.prisma.showtime.delete({ where: { id } });
     }
 }

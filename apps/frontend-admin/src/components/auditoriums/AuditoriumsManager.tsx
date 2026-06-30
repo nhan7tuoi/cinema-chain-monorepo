@@ -303,6 +303,7 @@ export function AuditoriumsManager() {
 
       {selectedAuditorium ? (
         <SeatMapEditor
+          key={selectedAuditorium.id}
           auditoriumName={selectedAuditorium.name}
           branchName={selectedAuditorium.branch?.name || selectedBranch?.name || ""}
           isActive={selectedAuditorium.isActive}

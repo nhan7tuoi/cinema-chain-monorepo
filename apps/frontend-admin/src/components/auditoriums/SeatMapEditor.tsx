@@ -67,10 +67,13 @@ export function SeatMapEditor({
 }: SeatMapEditorProps) {
   const [selectedTool, setSelectedTool] = React.useState<SeatTool>("STANDARD")
   const [selectedStatus, setSelectedStatus] = React.useState<SeatStatus>("ACTIVE")
+  const [activeToolGroup, setActiveToolGroup] = React.useState<"TYPE" | "STATUS">("TYPE")
   const [selectedSeatId, setSelectedSeatId] = React.useState<string | null>(null)
   const [pendingCoupleSeatId, setPendingCoupleSeatId] = React.useState<string | null>(null)
   const [draggingSeatId, setDraggingSeatId] = React.useState<string | null>(null)
   const [zoom, setZoom] = React.useState(42)
+  const mapContainerRef = React.useRef<HTMLDivElement>(null)
+  const [mapWidth, setMapWidth] = React.useState(0)
 
   const rowLabels = React.useMemo(() => buildRowLabels(rowCount), [rowCount])
   const cols = React.useMemo(() => Array.from({ length: colCount }, (_, index) => index + 1), [colCount])
@@ -79,13 +82,27 @@ export function SeatMapEditor({
   const maintenanceCount = seats.filter((seat) => seat.status === "MAINTENANCE").length
   const vipCount = seats.filter((seat) => seat.type === "VIP").length
   const coupleCount = seats.filter((seat) => seat.type === "COUPLE").length
-  const rowHeaderSize = Math.max(30, Math.round(zoom * 0.8))
-  const seatSize = Math.max(28, Math.round(zoom * 0.85))
+  const gridGap = colCount > 22 ? 4 : 8
+  const availableCellSize = mapWidth > 0
+    ? Math.floor((mapWidth - 48 - 30 - (colCount * gridGap)) / colCount)
+    : zoom
+  const displayZoom = Math.max(18, Math.min(zoom, availableCellSize))
+  const rowHeaderSize = Math.max(24, Math.round(displayZoom * 0.8))
+  const seatSize = Math.max(16, Math.round(displayZoom * 0.85))
 
   React.useEffect(() => {
-    setSelectedSeatId(null)
-    setPendingCoupleSeatId(null)
-  }, [auditoriumName])
+    const container = mapContainerRef.current
+    if (!container) return
+
+    const updateWidth = () => setMapWidth(container.clientWidth)
+    const frameId = requestAnimationFrame(updateWidth)
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(container)
+    return () => {
+      cancelAnimationFrame(frameId)
+      observer.disconnect()
+    }
+  }, [])
 
   const setSeats = (updater: (current: SeatNode[]) => SeatNode[]) => onSeatsChange(updater(seats))
 
@@ -160,6 +177,15 @@ export function SeatMapEditor({
   }
 
   const handleSeatClick = (seat: SeatNode) => {
+    if (activeToolGroup === "STATUS") {
+      setPendingCoupleSeatId(null)
+      setSelectedSeatId(seat.id)
+      setSeats((current) => current.map((item) => (
+        item.id === seat.id ? { ...item, status: selectedStatus } : item
+      )))
+      return
+    }
+
     if (selectedTool === "DELETE") {
       deleteSeat(seat)
       return
@@ -186,7 +212,7 @@ export function SeatMapEditor({
       return
     }
 
-    if (selectedTool === "DELETE") return
+    if (selectedTool === "DELETE" || activeToolGroup === "STATUS") return
 
     const nextSeat = { ...buildSeatAt(row, col, selectedTool), status: selectedStatus }
     if (selectedTool === "COUPLE" && pendingCoupleSeatId) {
@@ -308,6 +334,14 @@ export function SeatMapEditor({
     setPendingCoupleSeatId(null)
   }
 
+  const changeDimensions = (nextRowCount: number, nextColCount: number) => {
+    onRowCountChange(nextRowCount)
+    onColCountChange(nextColCount)
+    onSeatsChange(buildCustomSeats(nextRowCount, nextColCount))
+    setSelectedSeatId(null)
+    setPendingCoupleSeatId(null)
+  }
+
   const applyTemplate = (template: RoomTemplate) => {
     onRowCountChange(template.rowCount)
     onColCountChange(template.colCount)
@@ -328,11 +362,11 @@ export function SeatMapEditor({
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <label htmlFor="auditorium-row-count" className="text-xs font-semibold text-slate-500 dark:text-slate-400">So hang</label>
-              <Input id="auditorium-row-count" type="number" min={1} max={26} value={rowCount} onChange={(event) => onRowCountChange(Math.min(Math.max(Number(event.target.value) || 1, 1), 26))} />
+              <Input id="auditorium-row-count" type="number" min={1} max={26} value={rowCount} onChange={(event) => changeDimensions(Math.min(Math.max(Number(event.target.value) || 1, 1), 26), colCount)} />
             </div>
             <div className="space-y-2">
               <label htmlFor="auditorium-col-count" className="text-xs font-semibold text-slate-500 dark:text-slate-400">So cot</label>
-              <Input id="auditorium-col-count" type="number" min={1} max={30} value={colCount} onChange={(event) => onColCountChange(Math.min(Math.max(Number(event.target.value) || 1, 1), 30))} />
+              <Input id="auditorium-col-count" type="number" min={1} max={30} value={colCount} onChange={(event) => changeDimensions(rowCount, Math.min(Math.max(Number(event.target.value) || 1, 1), 30))} />
             </div>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={applyDimensions} className="mt-3 w-full">
@@ -348,11 +382,12 @@ export function SeatMapEditor({
                   type="button"
                   onClick={() => {
                     setSelectedTool(type)
+                    setActiveToolGroup("TYPE")
                     if (type !== "COUPLE") setPendingCoupleSeatId(null)
                   }}
                   className={cn(
                     "flex h-16 flex-col items-center justify-center gap-1 rounded-lg border text-xs font-semibold transition-colors",
-                    selectedTool === type ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+                    activeToolGroup === "TYPE" && selectedTool === type ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -365,11 +400,12 @@ export function SeatMapEditor({
             type="button"
             onClick={() => {
               setSelectedTool("DELETE")
+              setActiveToolGroup("TYPE")
               setPendingCoupleSeatId(null)
             }}
             className={cn(
               "mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-lg border text-sm font-semibold transition-colors",
-              selectedTool === "DELETE"
+              activeToolGroup === "TYPE" && selectedTool === "DELETE"
                 ? "border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
                 : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
             )}
@@ -383,10 +419,14 @@ export function SeatMapEditor({
               <button
                 key={status}
                 type="button"
-                onClick={() => setSelectedStatus(status)}
+                onClick={() => {
+                  setSelectedStatus(status)
+                  setActiveToolGroup("STATUS")
+                  setPendingCoupleSeatId(null)
+                }}
                 className={cn(
                   "rounded-lg border px-2 py-2 text-xs font-semibold transition-colors",
-                  selectedStatus === status ? "border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+                  activeToolGroup === "STATUS" && selectedStatus === status ? "border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
                 )}
               >
                 {seatStatusConfig[status].label}
@@ -471,22 +511,22 @@ export function SeatMapEditor({
           ))}
         </div>
 
-        <div className="overflow-auto bg-slate-50 p-4 dark:bg-slate-950">
-          <div className="min-w-[900px] rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        <div ref={mapContainerRef} className="overflow-auto bg-slate-50 p-4 dark:bg-slate-950">
+          <div className="w-full min-w-max rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
             <div className="mx-auto mb-8 max-w-3xl">
               <div className="h-3 rounded-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
               <p className="mt-2 text-center text-xs font-semibold uppercase tracking-[0.45em] text-slate-500 dark:text-slate-400">Man hinh chieu</p>
             </div>
 
-            <div className="grid justify-center gap-2" style={{ gridTemplateColumns: `${rowHeaderSize}px repeat(${colCount}, ${zoom}px)` }}>
+            <div className="grid justify-center" style={{ gap: `${gridGap}px`, gridTemplateColumns: `${rowHeaderSize}px repeat(${colCount}, ${displayZoom}px)` }}>
               <div />
               {cols.map((col) => (
-                <div key={col} className="text-center text-xs font-semibold text-slate-400" style={{ width: `${zoom}px` }}>{col}</div>
+                <div key={col} className="text-center text-xs font-semibold text-slate-400" style={{ width: `${displayZoom}px` }}>{col}</div>
               ))}
 
               {rowLabels.map((rowLabel, rowIndex) => (
                 <React.Fragment key={rowLabel}>
-                  <div className="flex items-center justify-center text-xs font-bold text-rose-500" style={{ height: `${zoom}px` }}>{rowLabel}</div>
+                  <div className="flex items-center justify-center text-xs font-bold text-rose-500" style={{ height: `${displayZoom}px` }}>{rowLabel}</div>
                   {cols.map((col) => {
                     const seat = seats.find((item) => item.row === rowIndex && item.col === col)
                     const SeatIcon = seat ? seatTypeConfig[seat.type].icon : null
@@ -499,7 +539,7 @@ export function SeatMapEditor({
                         onDrop={() => handleDropOnCell(rowIndex, col)}
                         onClick={() => handleCellClick(rowIndex, col)}
                         className="flex items-center justify-center rounded-md border border-dashed border-slate-200 transition-colors hover:border-indigo-300 dark:border-slate-800"
-                        style={{ height: `${zoom}px`, width: `${zoom}px` }}
+                        style={{ height: `${displayZoom}px`, width: `${displayZoom}px` }}
                       >
                         {seat && SeatIcon && (
                           <button
@@ -522,7 +562,7 @@ export function SeatMapEditor({
                             )}
                             style={{
                               height: `${seatSize}px`,
-                              width: coupleSide ? `${zoom + 8}px` : `${Math.max(seatSize, zoom - 4)}px`,
+                              width: coupleSide ? `${displayZoom + 4}px` : `${Math.max(seatSize, displayZoom - 4)}px`,
                               transform: coupleSide === "left" ? "translateX(4px)" : coupleSide === "right" ? "translateX(-4px)" : undefined,
                             }}
                             title={`${seat.code} - ${seatTypeConfig[seat.type].label}`}

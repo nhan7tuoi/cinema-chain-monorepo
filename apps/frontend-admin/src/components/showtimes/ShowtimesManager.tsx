@@ -27,6 +27,7 @@ import {
   formatHour,
   getEventStyle,
   getTimeLabel,
+  getVisibleEventRange,
   getWeekRange,
   getWeekRangeLabel,
   rowHeight,
@@ -213,6 +214,11 @@ export function ShowtimesManager() {
   }
 
   const handleDelete = async (showtime: Showtime) => {
+    if (new Date(showtime.startsAt) <= new Date()) {
+      toast.error("Khong the xoa suat chieu da bat dau.")
+      return
+    }
+
     if (!window.confirm(`Xoa suat chieu "${showtime.movie?.title || "nay"}"?`)) return
 
     try {
@@ -469,16 +475,19 @@ export function ShowtimesManager() {
                       {roomShowtimes.map((item) => {
                         const status = statusConfig[item.status] || statusConfig.SCHEDULED
                         const capacity = item.auditorium?.capacity || room.capacity || 0
+                        const eventDisplayDate = viewMode === "day" ? selectedDate : new Date(item.startsAt)
+                        const visibleRange = getVisibleEventRange(item.startsAt, item.endsAt, eventDisplayDate)
+                        const isCompact = visibleRange.durationMinutes < 120
 
                         return (
                           <div
                             key={item.id}
                             className="absolute left-3 right-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900"
-                            style={getEventStyle(item.startsAt, item.endsAt)}
+                            style={getEventStyle(item.startsAt, item.endsAt, eventDisplayDate)}
                           >
                             <div className={cn("absolute inset-y-0 left-0 w-1", status.rail)} />
-                            <div className="flex h-full flex-col justify-between p-3 pl-4">
-                              <div className="space-y-2">
+                            <div className={cn("flex h-full flex-col justify-between pl-4", isCompact ? "p-2.5" : "p-3")}>
+                              <div className={isCompact ? "space-y-1" : "space-y-2"}>
                                 <div className="flex items-start justify-between gap-2">
                                   <p className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-50">
                                     {item.movie?.title || "Chua ro phim"}
@@ -492,13 +501,19 @@ export function ShowtimesManager() {
                                     <Clock3 className="h-3 w-3" />
                                     {getTimeLabel(item.startsAt)} - {getTimeLabel(item.endsAt)}
                                   </span>
-                                  <span>{item.auditorium?.format || room.format}</span>
+                                  {!isCompact && <span>{item.auditorium?.format || room.format}</span>}
                                 </div>
-                                {item.note && (
+                                {visibleRange.continuesFromPreviousDay && (
+                                  <p className="text-[11px] font-medium text-indigo-500 dark:text-indigo-300">Tiep tuc tu hom truoc</p>
+                                )}
+                                {visibleRange.continuesToNextDay && (
+                                  <p className="text-[11px] font-medium text-indigo-500 dark:text-indigo-300">Tiep tuc sang hom sau</p>
+                                )}
+                                {!isCompact && item.note && (
                                   <p className="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">{item.note}</p>
                                 )}
                               </div>
-                              <div className="flex items-end justify-between gap-2">
+                              {!isCompact && <div className="flex items-end justify-between gap-2">
                                 <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                                   0/{capacity} ghe
                                 </p>
@@ -513,7 +528,7 @@ export function ShowtimesManager() {
                                       <Pencil className="h-3.5 w-3.5" />
                                     </button>
                                   )}
-                                  {canDelete && (
+                                  {canDelete && new Date(item.startsAt) > now && (
                                     <button
                                       type="button"
                                       onClick={() => handleDelete(item)}
@@ -524,7 +539,31 @@ export function ShowtimesManager() {
                                     </button>
                                   )}
                                 </div>
-                              </div>
+                              </div>}
+                              {isCompact && (canUpdate || (canDelete && new Date(item.startsAt) > now)) && (
+                                <div className="absolute bottom-1.5 right-2 flex items-center gap-1 rounded-md bg-white/90 pl-1 shadow-sm dark:bg-slate-900/90">
+                                  {canUpdate && (
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditDialog(item)}
+                                      className="rounded p-1 text-amber-500 transition-colors hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-500/10"
+                                      title="Sua"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
+                                  {canDelete && new Date(item.startsAt) > now && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDelete(item)}
+                                      className="rounded p-1 text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+                                      title="Xoa"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         )

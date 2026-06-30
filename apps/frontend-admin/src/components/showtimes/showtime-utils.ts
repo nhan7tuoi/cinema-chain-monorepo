@@ -1,7 +1,7 @@
 import { ShowtimeStatus } from "./types"
 
-export const scheduleStartHour = 8
-export const scheduleEndHour = 27
+export const scheduleStartHour = 0
+export const scheduleEndHour = 24
 export const timeSlots = Array.from({ length: scheduleEndHour - scheduleStartHour }, (_, index) => scheduleStartHour + index)
 export const rowHeight = 72
 
@@ -66,7 +66,7 @@ export function getWeekRange(date: Date) {
   return { start, end }
 }
 
-export function getTimeLabel(value: string) {
+export function getTimeLabel(value: string | Date) {
   return new Date(value).toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -74,17 +74,37 @@ export function getTimeLabel(value: string) {
   })
 }
 
-export function getEventStyle(startsAt: string, endsAt: string) {
+export function getVisibleEventRange(startsAt: string, endsAt: string, displayDate: Date) {
   const start = new Date(startsAt)
   const end = new Date(endsAt)
-  const startMinutes = start.getHours() * 60 + start.getMinutes()
-  const normalizedStartMinutes = startMinutes < scheduleStartHour * 60 ? startMinutes + 24 * 60 : startMinutes
-  const startOffset = normalizedStartMinutes - scheduleStartHour * 60
-  const duration = Math.max((end.getTime() - start.getTime()) / 60000, 30)
+  const dayStart = new Date(displayDate)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(dayStart)
+  dayEnd.setDate(dayEnd.getDate() + 1)
+  const visibleStart = new Date(Math.max(start.getTime(), dayStart.getTime()))
+  const visibleEnd = new Date(Math.min(end.getTime(), dayEnd.getTime()))
+  const continuesFromPreviousDay = start < dayStart
+  const continuesToNextDay = end > dayEnd
+
+  return {
+    visibleStart,
+    visibleEnd,
+    durationMinutes: Math.max((visibleEnd.getTime() - visibleStart.getTime()) / 60000, 0),
+    startLabel: continuesFromPreviousDay ? "00:00" : getTimeLabel(visibleStart),
+    endLabel: continuesToNextDay ? "24:00" : getTimeLabel(visibleEnd),
+    continuesFromPreviousDay,
+    continuesToNextDay,
+    dayStart,
+  }
+}
+
+export function getEventStyle(startsAt: string, endsAt: string, displayDate: Date) {
+  const { visibleStart, durationMinutes, dayStart } = getVisibleEventRange(startsAt, endsAt, displayDate)
+  const startOffset = (visibleStart.getTime() - dayStart.getTime()) / 60000 - scheduleStartHour * 60
 
   return {
     top: `${Math.max((startOffset / 60) * rowHeight, 0)}px`,
-    height: `${Math.max((duration / 60) * rowHeight - 12, 92)}px`,
+    height: `${Math.max((durationMinutes / 60) * rowHeight - 4, 104)}px`,
   }
 }
 

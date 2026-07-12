@@ -17,13 +17,49 @@ export class BranchesService {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
+        slug: true,
         name: true,
         address: true,
+        city: true,
+        district: true,
+        latitude: true,
+        longitude: true,
         phone: true,
+        coverUrl: true,
+        mapUrl: true,
+        openingHours: true,
+        amenities: true,
         isActive: true,
         createdAt: true,
       }
     });
+  }
+
+  async findAllClient(limit = 4) {
+    const safeLimit = Math.max(1, Math.min(limit, 12));
+
+    const branches = await this.prisma.branch.findMany({
+      where: { isActive: true },
+      take: safeLimit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        address: true,
+        city: true,
+        district: true,
+        mapUrl: true,
+      },
+    });
+
+    return branches.map((branch) => ({
+      id: branch.slug ?? branch.id,
+      name: branch.name,
+      address: [branch.address, branch.district, branch.city].filter(Boolean).join(', '),
+      distance: 'Xem bản đồ',
+      mapUrl: branch.mapUrl,
+    }));
   }
 
   async findOne(id: string) {

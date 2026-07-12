@@ -1,6 +1,6 @@
 generator client {
   provider     = "prisma-client-js"
-  output       = "../../node_modules/.prisma/generated"
+  output       = "../node_modules/.prisma/generated"
   moduleFormat = "commonjs"
 }
 
@@ -126,18 +126,29 @@ model RolePermission {
 // =========================================================================
 
 model Branch {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  address   String
-  phone     String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  slug         String?  @unique
+  name         String   @unique
+  address      String
+  city         String?
+  district     String?
+  latitude     Decimal? @db.Decimal(10, 7)
+  longitude    Decimal? @db.Decimal(10, 7)
+  phone        String?
+  coverUrl     String?  @db.Text
+  mapUrl       String?  @db.Text
+  openingHours Json?
+  amenities    Json?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   employees   Employee[]
   auditoriums Auditorium[]
   showtimes   Showtime[]
 
+  @@index([city, district])
+  @@index([isActive])
   @@map("branches")
 }
 
@@ -151,26 +162,82 @@ enum MovieStatus {
   ENDED
 }
 
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+
 model Movie {
-  id          String      @id @default(uuid())
-  title       String
-  director    String?
-  cast        String?
-  genre       String?
-  duration    Int // Thời lượng (phút)
-  releaseDate DateTime
-  endDate     DateTime?
-  format      String      @default("2D")
-  synopsis    String?     @db.Text
-  posterUrl   String?     @db.Text
-  trailerUrl  String?     @db.Text
-  status      MovieStatus @default(COMING_SOON)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id            String      @id @default(uuid())
+  slug          String?     @unique
+  title         String
+  originalTitle String?
+  director      String?
+  cast          String?
+  genre         String?
+  duration      Int // Thời lượng (phút)
+  releaseDate   DateTime
+  endDate       DateTime?
+  format        String      @default("2D")
+  synopsis      String?     @db.Text
+  posterUrl     String?     @db.Text
+  backdropUrl   String?     @db.Text
+  trailerUrl    String?     @db.Text
+  ageRating     String?
+  language      String?
+  subtitle      String?
+  country       String?
+  averageRating Decimal?    @db.Decimal(3, 1)
+  ratingCount   Int         @default(0)
+  viewCount     Int         @default(0)
+  isFeatured    Boolean     @default(false)
+  featuredOrder Int?
+  status        MovieStatus @default(COMING_SOON)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   showtimes Showtime[]
 
+  @@index([status, releaseDate])
+  @@index([isFeatured, featuredOrder])
   @@map("movies")
+}
+
+model Promotion {
+  id        String    @id @default(uuid())
+  slug      String    @unique
+  title     String
+  summary   String?
+  content   String?   @db.Text
+  imageUrl  String?   @db.Text
+  badge     String?
+  startsAt  DateTime?
+  endsAt    DateTime?
+  terms     String?   @db.Text
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isActive, startsAt, endsAt])
+  @@map("promotions")
+}
+
+model Article {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  title       String
+  excerpt     String?
+  content     String?       @db.Text
+  coverUrl    String?       @db.Text
+  category    String?
+  status      ArticleStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+  @@map("articles")
 }
 
 model Auditorium {
@@ -226,6 +293,7 @@ model Showtime {
   @@index([auditoriumId, startsAt])
   @@map("showtimes")
 }
+
 enum SeatType {
   STANDARD
   VIP
@@ -239,7 +307,7 @@ enum SeatStatus {
 }
 
 model Seat {
-  id           String      @id @default(uuid())
+  id           String     @id @default(uuid())
   auditoriumId String
   auditorium   Auditorium @relation(fields: [auditoriumId], references: [id], onDelete: Cascade)
 

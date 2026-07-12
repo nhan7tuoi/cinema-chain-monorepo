@@ -16,6 +16,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { AuditoriumModule } from './modules/auditorium/auditorium.module';
 import { ShowtimeModule } from './modules/showtime/showtime.module';
 import { SeatModule } from './modules/seat/seat.module';
+import { PromotionsModule } from './modules/promotions/promotions.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { SeatModule } from './modules/seat/seat.module';
     AuditoriumModule,
     SeatModule,
     ShowtimeModule,
+    PromotionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

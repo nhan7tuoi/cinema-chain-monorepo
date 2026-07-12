@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
-import { MovieStatus } from '.prisma/generated';
+import { MovieStatus, Prisma } from '.prisma/generated';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 
@@ -34,18 +34,23 @@ export class MoviesService {
     });
   }
 
-  async findAllClient(query: { page?: number; limit?: number; status?: MovieStatus }) {
-    const { page = 1, limit = 10, status } = query;
+  async findAllClient(query: { page?: number; limit?: number; status?: MovieStatus; isFeatured?: string }) {
+    const { page = 1, limit = 10, status, isFeatured } = query;
     const skip = (page - 1) * limit;
 
-    const where = status ? { status } : {};
+    const where: Prisma.MovieWhereInput = {
+      ...(status ? { status } : {}),
+      ...(isFeatured !== undefined ? { isFeatured: isFeatured === 'true' } : {}),
+    };
 
     const [data, total] = await Promise.all([
       this.prisma.movie.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { releaseDate: 'desc' }, // Sort by release date for client
+        orderBy: isFeatured === 'true'
+          ? [{ featuredOrder: 'asc' }, { viewCount: 'desc' }, { releaseDate: 'desc' }]
+          : [{ releaseDate: 'desc' }],
       }),
       this.prisma.movie.count({ where }),
     ]);
@@ -59,6 +64,26 @@ export class MoviesService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async findHotClient(limit = 10) {
+    const safeLimit = Math.max(1, Math.min(limit, 20));
+
+    return this.prisma.movie.findMany({
+      where: {
+        isFeatured: true,
+        status: {
+          in: [MovieStatus.NOW_SHOWING, MovieStatus.COMING_SOON],
+        },
+      },
+      take: safeLimit,
+      orderBy: [
+        { featuredOrder: 'asc' },
+        { viewCount: 'desc' },
+        { averageRating: 'desc' },
+        { releaseDate: 'desc' },
+      ],
+    });
   }
 
   async findOne(id: string) {

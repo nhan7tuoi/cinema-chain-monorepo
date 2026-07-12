@@ -1,21 +1,67 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import type { Prisma } from '.prisma/generated';
+import { IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class CreateBranchDto {
-  @ApiProperty({ example: 'Chi nhánh 1', description: 'Tên chi nhánh' })
+  @ApiPropertyOptional({ example: 'cinepremium-hung-vuong' })
+  @IsString()
+  @IsOptional()
+  slug?: string;
+
+  @ApiProperty({ example: 'CinePremium Hung Vuong', description: 'Branch name' })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: '123 Đường ABC, Quận X, TP Y', description: 'Địa chỉ chi nhánh' })
+  @ApiProperty({ example: '123 Hung Vuong, District 5, Ho Chi Minh City', description: 'Branch address' })
   @IsString()
   @IsNotEmpty()
   address: string;
 
-  @ApiProperty({ example: '0123456789', description: 'Số điện thoại liên hệ', required: false })
+  @ApiPropertyOptional({ example: 'Ho Chi Minh City' })
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @ApiPropertyOptional({ example: 'District 5' })
+  @IsString()
+  @IsOptional()
+  district?: string;
+
+  @ApiPropertyOptional({ example: 10.754792 })
+  @IsNumber()
+  @IsOptional()
+  latitude?: number;
+
+  @ApiPropertyOptional({ example: 106.663858 })
+  @IsNumber()
+  @IsOptional()
+  longitude?: number;
+
+  @ApiPropertyOptional({ example: '0281234567', description: 'Contact phone' })
   @IsString()
   @IsOptional()
   phone?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/cinema.jpg' })
+  @IsUrl()
+  @IsOptional()
+  coverUrl?: string;
+
+  @ApiPropertyOptional({ example: 'https://maps.google.com/?q=10.754792,106.663858' })
+  @IsUrl()
+  @IsOptional()
+  mapUrl?: string;
+
+  @ApiPropertyOptional({ example: { weekdays: '09:00-23:00', weekend: '08:00-24:00' } })
+  @IsObject()
+  @IsOptional()
+  openingHours?: Prisma.InputJsonValue;
+
+  @ApiPropertyOptional({ example: { parking: true, imax: true, vip: true } })
+  @IsObject()
+  @IsOptional()
+  amenities?: Prisma.InputJsonValue;
 }
 
 export class UpdateBranchDto extends PartialType(CreateBranchDto) {}

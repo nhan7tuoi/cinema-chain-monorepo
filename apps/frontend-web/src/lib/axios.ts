@@ -21,7 +21,7 @@ export interface CustomAxiosInstance extends Omit<AxiosInstance, 'get' | 'post' 
 }
 
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   timeout: 10000, // 10 giây
   headers: {
     'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ apiClient.interceptors.request.use(
           // if (userInfo.branchId) {
           //   config.headers['x-branch-id'] = userInfo.branchId;
           // }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
     return config;
@@ -74,7 +74,7 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     if (error.response) {
       const { status } = error.response;
-      
+
       switch (status) {
         case 401:
           const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
@@ -92,7 +92,7 @@ apiClient.interceptors.response.use(
           }
 
           if (isRefreshing) {
-            return new Promise(function(resolve, reject) {
+            return new Promise(function (resolve, reject) {
               failedQueue.push({ resolve, reject });
             }).then(token => {
               originalRequest.headers.Authorization = 'Bearer ' + token;
@@ -108,7 +108,7 @@ apiClient.interceptors.response.use(
           try {
             const refreshToken = Cookies.get('refresh_token');
             if (!refreshToken) {
-               throw new Error('No refresh token available');
+              throw new Error('No refresh token available');
             }
 
             const res = await axios.post('/api/auth/refresh', {}, {
@@ -118,7 +118,7 @@ apiClient.interceptors.response.use(
             const { accessToken, refreshToken: newRefreshToken } = res.data.data || res.data;
             Cookies.set('access_token', accessToken);
             Cookies.set('refresh_token', newRefreshToken);
-            
+
             apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 

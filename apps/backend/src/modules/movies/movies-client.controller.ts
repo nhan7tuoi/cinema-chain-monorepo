@@ -1,22 +1,29 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetHotMoviesClientDto, GetMoviesClientDto } from './dto/get-movies-client.dto';
 import { MoviesService } from './movies.service';
-import { GetMoviesClientDto } from './dto/get-movies-client.dto';
 
 @ApiTags('Client - Movies')
 @Controller('client/movies')
 export class MoviesClientController {
-  constructor(private readonly moviesService: MoviesService) {}
+  constructor(private readonly moviesService: MoviesService) { }
 
-  @ApiOperation({ summary: 'Lấy danh sách tất cả các phim cho Web/App (có phân trang)' })
-  @ApiResponse({ status: 200, description: 'Danh sách phim có phân trang' })
+  @ApiOperation({ summary: 'Lay danh sach phim cho Web/App' })
+  @ApiResponse({ status: 200, description: 'Danh sach phim co phan trang' })
   @Get()
   findAll(@Query() query: GetMoviesClientDto) {
     return this.moviesService.findAllClient(query);
   }
 
-  @ApiOperation({ summary: 'Lấy thông tin chi tiết một bộ phim' })
-  @ApiResponse({ status: 200, description: 'Thông tin chi tiết phim' })
+  @ApiOperation({ summary: 'Lay danh sach phim hot/noi bat cho trang chu' })
+  @ApiResponse({ status: 200, description: 'Danh sach phim hot' })
+  @Get('trending')
+  findHot(@Query() query: GetHotMoviesClientDto) {
+    return this.moviesService.findHotClient(query.limit);
+  }
+
+  @ApiOperation({ summary: 'Lay thong tin chi tiet mot phim' })
+  @ApiResponse({ status: 200, description: 'Thong tin chi tiet phim' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.moviesService.findOne(id);

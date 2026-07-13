@@ -121,11 +121,6 @@ export function TrendingMoviesSection() {
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-90" />
                       <div className="absolute inset-0 bg-[#e50914]/0 transition duration-500 group-hover:bg-[#e50914]/10" />
-
-                      <span className="absolute left-3 top-3 text-5xl font-black italic leading-none text-white/25 transition group-hover:text-[#e50914]">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-
                       <span className="absolute right-3 top-3 inline-flex items-center gap-1 bg-black/60 px-2 py-1 text-[11px] font-bold text-white backdrop-blur">
                         <Star className="size-3 fill-[#e50914] text-[#e50914]" />
                         {movie.averageRating ?? "8.0"}

@@ -1,4 +1,5 @@
 import { HomePageData } from "../types/home.types";
+import { PageBody, PageSection } from "@/components/common/layout/page-shell";
 import { HeroSection } from "./hero-section";
 import { NearbyCinemasSection } from "./nearby-cinemas-section";
 import { NowShowingSection } from "./nowShowing-movie-section";
@@ -12,15 +13,18 @@ type HomePageProps = {
 
 export function Homepage({ data }: HomePageProps) {
   return (
-    <main className="min-h-screen bg-zinc-50 text-zinc-950 transition-colors dark:bg-[#050606] dark:text-white">
+    <PageBody>
       {data.hero ? (
         <HeroSection movies={data.trendingMovies.length > 0 ? data.trendingMovies : [data.hero]} />
       ) : (
-        <section className="flex min-h-[720px] items-center justify-center px-8 pt-20 text-center">
+        <PageSection
+          className="flex min-h-[520px] items-center pt-24 text-center sm:min-h-[640px]"
+          innerClassName="flex justify-center"
+        >
           <p className="max-w-md text-sm font-medium text-zinc-500 dark:text-zinc-400">
             Chưa có phim nổi bật để hiển thị.
           </p>
-        </section>
+        </PageSection>
       )}
 
       <TrendingMoviesSection />
@@ -28,6 +32,6 @@ export function Homepage({ data }: HomePageProps) {
       <SpotlightTrailerSection />
       <PromotionsSection />
       <NearbyCinemasSection />
-    </main>
+    </PageBody>
   );
 }

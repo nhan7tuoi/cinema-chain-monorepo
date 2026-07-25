@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Clock3, Ticket } from "lucide-react";
+import { PageContainer } from "@/components/common/layout/page-shell";
+import { ResponsiveText } from "@/components/common/typography";
 import { getNowShowingMovies } from "../api/home.api";
 import type { HomeMovie } from "../types/home.types";
 
@@ -38,27 +40,27 @@ export function NowShowingSection() {
   }, [inView, movies.length]);
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-white py-20 transition-colors dark:bg-black">
+    <section ref={ref} className="relative overflow-hidden bg-white py-12 transition-colors sm:py-16 lg:py-20 dark:bg-black">
       <div className="absolute left-0 top-16 h-40 w-px bg-[#e50914]/70" />
-      <div className="mx-auto max-w-[1440px] px-6 lg:px-16">
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#e50914]">
+      <PageContainer>
+        <ResponsiveText variant="eyebrow">
           Lịch chiếu hôm nay
-        </p>
+        </ResponsiveText>
 
-        <h2 className="mt-3 text-4xl font-black uppercase italic leading-none text-zinc-950 dark:text-white lg:text-5xl">
+        <ResponsiveText as="h2" variant="sectionTitle" className="mt-3">
           Phim đang chiếu
-        </h2>
+        </ResponsiveText>
 
         {loading ? (
-          <div className="mt-9 flex gap-4 overflow-hidden">
+          <div className="mt-8 flex gap-3 overflow-hidden sm:mt-9 sm:gap-4">
             {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="h-[348px] min-w-[210px] animate-pulse bg-zinc-200 dark:bg-white/[0.07]" />
+              <div key={index} className="h-[286px] min-w-[156px] animate-pulse bg-zinc-200 min-[390px]:min-w-[170px] sm:h-[348px] sm:min-w-[210px] dark:bg-white/[0.07]" />
             ))}
           </div>
         ) : null}
 
         <motion.div
-          className="-mx-2 mt-9 flex gap-4 overflow-x-auto px-2 pb-6 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="-mx-4 mt-8 flex snap-x gap-3 overflow-x-auto px-4 pb-6 pt-2 [scrollbar-width:none] sm:-mx-2 sm:mt-9 sm:gap-4 sm:px-2 [&::-webkit-scrollbar]:hidden"
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
@@ -70,7 +72,7 @@ export function NowShowingSection() {
           {movies.map((movie) => (
             <motion.article
               key={movie.id}
-              className="group min-w-[214px]"
+              className="group min-w-[156px] snap-start min-[390px]:min-w-[170px] sm:min-w-[214px]"
               variants={{
                 hidden: { opacity: 0, y: 34, scale: 0.95 },
                 show: { opacity: 1, y: 0, scale: 1 },
@@ -84,7 +86,7 @@ export function NowShowingSection() {
                       src={movie.posterUrl || movie.backdropUrl || "/window.svg"}
                       alt={movie.title}
                       fill
-                      sizes="214px"
+                        sizes="(max-width: 640px) 46vw, 214px"
                       className="object-cover transition duration-700 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
@@ -110,7 +112,7 @@ export function NowShowingSection() {
 
                   <Link
                     href={`/tickets?movieId=${movie.id}`}
-                    className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 bg-zinc-900 text-xs font-bold uppercase text-white transition hover:bg-[#e50914] dark:bg-zinc-800"
+                    className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 bg-[#e50914] text-xs font-bold uppercase text-white transition hover:bg-[#ff1f2d] focus-visible:bg-[#ff1f2d] dark:bg-[#e50914] dark:hover:bg-[#ff1f2d]"
                   >
                     <Ticket className="size-3" />
                     Đặt vé
@@ -120,7 +122,7 @@ export function NowShowingSection() {
             </motion.article>
           ))}
         </motion.div>
-      </div>
+      </PageContainer>
     </section>
   );
 }

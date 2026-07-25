@@ -4,6 +4,16 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/axios';
 import Cookies from 'js-cookie';
+import { PageBody, PageSection } from '@/components/common/layout/page-shell';
+
+type ApiError = {
+  response?: {
+    data?: {
+      message?: string | string[];
+    };
+  };
+  message?: string;
+};
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -31,8 +41,6 @@ export default function LoginPage() {
           if (user) {
             Cookies.set('user_info', JSON.stringify(user), { expires: 1 });
           }
-          
-          console.log('Login success');
           router.push('/');
         } else {
           setError('Không tìm thấy token trong phản hồi.');
@@ -40,15 +48,20 @@ export default function LoginPage() {
       } else {
         setError(response.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || 'Có lỗi xảy ra.';
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const errorMsg = apiError.response?.data?.message || apiError.message || 'Có lỗi xảy ra.';
       setError(typeof errorMsg === 'string' ? errorMsg : errorMsg[0] || 'Đăng nhập thất bại!');
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-gray-900 p-8 shadow-2xl">
+    <PageBody className="bg-gray-950 text-white dark:bg-gray-950">
+      <PageSection
+        className="flex min-h-screen items-center pt-28 sm:pt-32"
+        innerClassName="flex justify-center"
+      >
+        <div className="w-full max-w-md space-y-8 rounded-xl bg-gray-900 p-8 shadow-2xl">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
             Sign in to CINEPROX
@@ -104,7 +117,8 @@ export default function LoginPage() {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+        </div>
+      </PageSection>
+    </PageBody>
   );
 }

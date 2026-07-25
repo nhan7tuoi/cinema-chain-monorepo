@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Play, Share2, Ticket } from "lucide-react";
+import { PageContainer } from "@/components/common/layout/page-shell";
+import { ResponsiveText } from "@/components/common/typography";
 import { getComingSoonMovies } from "../api/home.api";
 import type { HomeMovie } from "../types/home.types";
 
@@ -60,72 +62,72 @@ export function SpotlightTrailerSection() {
   const releaseText = useMemo(() => getCountdown(movie?.releaseDate), [movie?.releaseDate]);
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-white py-24 text-zinc-950 transition-colors dark:bg-black dark:text-white">
+    <section ref={ref} className="relative overflow-hidden bg-white py-12 text-zinc-950 transition-colors sm:py-16 lg:py-20 xl:py-24 dark:bg-black dark:text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_48%,rgba(229,9,20,0.1),transparent_34%)] dark:bg-[radial-gradient(circle_at_62%_48%,rgba(229,9,20,0.22),transparent_34%)]" />
 
-      <div className="relative mx-auto max-w-[1440px] px-6 lg:px-16">
+      <PageContainer className="relative">
         <motion.div
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center"
+          className="text-left sm:text-center"
         >
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.36em] text-[#e50914]">
+          <ResponsiveText variant="eyebrowWide">
             Siêu phẩm mong đợi
-          </p>
+          </ResponsiveText>
 
-          <h2 className="mt-3 text-4xl font-black uppercase italic leading-none text-zinc-950 dark:text-white lg:text-6xl">
+          <ResponsiveText as="h2" variant="sectionTitleLarge" className="mt-3">
             Vượt ngoài chân trời
-          </h2>
+          </ResponsiveText>
         </motion.div>
 
         {loading ? (
-          <div className="mt-12 grid gap-8 lg:grid-cols-[380px_1fr]">
-            <div className="h-[310px] animate-pulse bg-zinc-200 dark:bg-white/[0.07]" />
-            <div className="h-[310px] animate-pulse bg-zinc-200 dark:bg-white/[0.07]" />
+          <div className="mt-8 grid gap-4 sm:mt-12 lg:grid-cols-[380px_1fr] lg:gap-8">
+            <div className="h-[260px] animate-pulse bg-zinc-200 sm:h-[310px] dark:bg-white/[0.07]" />
+            <div className="h-[220px] animate-pulse bg-zinc-200 sm:h-[310px] dark:bg-white/[0.07]" />
           </div>
         ) : null}
 
         {movie ? (
-          <div className="mt-12 grid items-stretch gap-8 lg:grid-cols-[390px_1fr]">
+          <div className="mt-8 grid items-stretch gap-4 sm:mt-12 sm:gap-6 lg:grid-cols-[390px_1fr] lg:gap-8">
             <motion.div
               initial={{ opacity: 0, x: -36 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="border border-zinc-200 border-l-[#e50914] bg-white p-7 shadow-[0_20px_50px_rgba(15,23,42,0.1)] dark:border-white/10 dark:bg-[#080909]/95 dark:shadow-[0_26px_70px_rgba(0,0,0,0.5)]"
+              className="border border-zinc-200 border-l-[#e50914] bg-white p-4 shadow-[0_20px_50px_rgba(15,23,42,0.1)] sm:p-7 dark:border-white/10 dark:bg-[#080909]/95 dark:shadow-[0_26px_70px_rgba(0,0,0,0.5)]"
             >
               <p className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-zinc-500">
                 Đếm ngược công chiếu
               </p>
 
-              <div className="mt-6 grid grid-cols-3 border border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-black/45">
+              <div className="mt-5 grid grid-cols-3 border border-zinc-200 bg-zinc-50 sm:mt-6 dark:border-white/10 dark:bg-black/45">
                 {[
                   ["Ngày", releaseText.days],
                   ["Giờ", releaseText.hours],
                   ["Phút", releaseText.minutes],
                 ].map(([label, value]) => (
-                  <div key={label} className="border-r border-zinc-200 p-4 last:border-r-0 dark:border-white/10">
-                    <p className="text-4xl font-black leading-none text-zinc-950 dark:text-white">{value}</p>
+                  <div key={label} className="border-r border-zinc-200 p-3 last:border-r-0 sm:p-4 dark:border-white/10">
+                    <p className="text-2xl font-black leading-none text-zinc-950 sm:text-4xl dark:text-white">{value}</p>
                     <p className="mt-2 text-[10px] font-bold uppercase text-zinc-500">{label}</p>
                   </div>
                 ))}
               </div>
 
-              <h3 className="mt-6 text-2xl font-black uppercase italic leading-7 text-zinc-950 dark:text-white">
+              <ResponsiveText as="h3" variant="cardTitle" className="mt-5 uppercase italic sm:mt-6 sm:text-2xl">
                 {movie.title}
-              </h3>
+              </ResponsiveText>
 
-              <p className="mt-4 line-clamp-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+              <ResponsiveText variant="body" className="mt-4 line-clamp-4">
                 {movie.synopsis ||
                   "Một chuyến hành trình vượt giới hạn không gian, thời gian và cảm xúc điện ảnh."}
-              </p>
+              </ResponsiveText>
 
               <div className="mt-7 flex gap-3">
                 <Link
                   href={`/tickets?movieId=${movie.id}`}
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 bg-zinc-950 text-xs font-extrabold uppercase text-white transition hover:bg-[#e50914] dark:bg-white dark:text-black dark:hover:bg-[#e50914] dark:hover:text-white"
+                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 bg-[#e50914] text-xs font-extrabold uppercase text-white transition hover:bg-[#ff1f2d] focus-visible:bg-[#ff1f2d] dark:bg-[#e50914] dark:text-white dark:hover:bg-[#ff1f2d] dark:hover:text-white"
                 >
                   <Ticket className="size-4" />
                   Mua vé tối
@@ -147,13 +149,13 @@ export function SpotlightTrailerSection() {
               whileInView={{ opacity: 1, x: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.65, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative min-h-[310px] overflow-hidden bg-zinc-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)] ring-1 ring-black/10 dark:shadow-[0_28px_90px_rgba(229,9,20,0.18)] dark:ring-white/10"
+              className="group relative min-h-[220px] overflow-hidden bg-zinc-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)] ring-1 ring-black/10 sm:min-h-[310px] dark:shadow-[0_28px_90px_rgba(229,9,20,0.18)] dark:ring-white/10"
             >
               <Image
                 src={movie.backdropUrl || movie.posterUrl || "/window.svg"}
                 alt={movie.title}
                 fill
-                sizes="900px"
+                sizes="(max-width: 1024px) 100vw, 900px"
                 className="object-cover transition duration-700 group-hover:scale-105"
               />
 
@@ -168,7 +170,7 @@ export function SpotlightTrailerSection() {
             </motion.a>
           </div>
         ) : null}
-      </div>
+      </PageContainer>
     </section>
   );
 }

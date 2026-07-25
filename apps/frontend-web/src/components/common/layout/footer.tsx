@@ -50,7 +50,7 @@ const socialLinks = [
 export function FooterLayout() {
   return (
     <footer className="border-t border-zinc-200 bg-white text-zinc-950 transition-colors dark:border-white/10 dark:bg-[#050606] dark:text-white">
-      <div className="mx-auto max-w-[1440px] px-8 py-16">
+      <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6 sm:py-14 lg:px-10 xl:px-16">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_2fr]">
           <div className="max-w-sm space-y-5">
             <Link

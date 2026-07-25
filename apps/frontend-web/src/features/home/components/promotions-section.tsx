@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, CreditCard, Gift, Ticket } from "lucide-react";
+import { PageContainer } from "@/components/common/layout/page-shell";
+import { ResponsiveText } from "@/components/common/typography";
 import { getHomePromotions } from "../api/home.api";
 import type { HomePromotion } from "../types/home.types";
 
@@ -34,20 +36,20 @@ export function PromotionsSection() {
   }, [inView, promotions.length]);
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-zinc-50 py-24 transition-colors dark:bg-[#0b0f0e]">
+    <section ref={ref} className="relative overflow-hidden bg-zinc-50 py-12 transition-colors sm:py-16 lg:py-20 xl:py-24 dark:bg-[#0b0f0e]">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#e50914]/35 to-transparent dark:via-[#e50914]/45" />
 
-      <div className="mx-auto max-w-[1440px] px-6 lg:px-16">
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#e50914]">
+      <PageContainer>
+        <ResponsiveText variant="eyebrow">
           Ưu đãi chỉ có tại CinePremium
-        </p>
+        </ResponsiveText>
 
-        <h2 className="mt-3 text-4xl font-black uppercase italic leading-none text-zinc-950 dark:text-white lg:text-5xl">
+        <ResponsiveText as="h2" variant="sectionTitle" className="mt-3">
           Khuyến mãi đặc biệt
-        </h2>
+        </ResponsiveText>
 
         <motion.div
-          className="mt-9 grid gap-5 lg:grid-cols-3"
+          className="mt-8 grid gap-4 sm:mt-9 sm:gap-5 lg:grid-cols-3"
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
@@ -62,7 +64,7 @@ export function PromotionsSection() {
             return (
               <motion.article
                 key={promotion.id}
-                className="group relative overflow-hidden border border-[#e50914]/45 bg-white p-7 shadow-[0_18px_38px_rgba(15,23,42,0.08)] transition duration-500 hover:-translate-y-1 hover:border-[#e50914] dark:border-[#e50914]/55 dark:bg-black/25 dark:shadow-none dark:hover:bg-black/45"
+                className="group relative overflow-hidden border border-[#e50914]/45 bg-white p-4 shadow-[0_18px_38px_rgba(15,23,42,0.08)] transition duration-500 hover:-translate-y-1 hover:border-[#e50914] sm:p-7 dark:border-[#e50914]/55 dark:bg-black/25 dark:shadow-none dark:hover:bg-black/45"
                 variants={{
                   hidden: { opacity: 0, y: 32, scale: 0.97 },
                   show: { opacity: 1, y: 0, scale: 1 },
@@ -77,7 +79,7 @@ export function PromotionsSection() {
                   {promotion.title}
                 </h3>
 
-                <p className="mt-3 min-h-[78px] text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                <p className="mt-3 text-sm leading-6 text-zinc-600 sm:min-h-[78px] dark:text-zinc-400">
                   {promotion.description}
                 </p>
 
@@ -92,7 +94,7 @@ export function PromotionsSection() {
             );
           })}
         </motion.div>
-      </div>
+      </PageContainer>
     </section>
   );
 }

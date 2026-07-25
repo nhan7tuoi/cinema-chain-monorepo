@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { MapPin, Navigation } from "lucide-react";
+import { PageContainer } from "@/components/common/layout/page-shell";
+import { ResponsiveText } from "@/components/common/typography";
 import { getNearbyCinemas } from "../api/home.api";
 import type { HomeCinema } from "../types/home.types";
 
@@ -32,41 +34,41 @@ export function NearbyCinemasSection() {
   }, [inView, cinemas.length]);
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-white py-24 transition-colors dark:bg-[#080b0a]">
+    <section ref={ref} className="relative overflow-hidden bg-white py-12 transition-colors sm:py-16 lg:py-20 xl:py-24 dark:bg-[#080b0a]">
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10" />
 
-      <div className="mx-auto grid max-w-[1440px] gap-10 px-6 lg:grid-cols-[1fr_600px] lg:px-16">
+      <PageContainer className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,600px)] lg:gap-10">
         <motion.div
           initial={{ opacity: 0, x: -32 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#e50914]">
+          <ResponsiveText variant="eyebrow">
             Tìm kiếm rạp chiếu
-          </p>
+          </ResponsiveText>
 
-          <h2 className="mt-3 text-4xl font-black uppercase italic leading-none text-zinc-950 dark:text-white lg:text-5xl">
+          <ResponsiveText as="h2" variant="sectionTitle" className="mt-3">
             Rạp phim gần bạn
-          </h2>
+          </ResponsiveText>
 
-          <div className="mt-9 space-y-3">
+          <div className="mt-8 space-y-3 sm:mt-9">
             {cinemas.map((cinema, index) => (
               <Link
                 key={cinema.id}
                 href={`/cinemas/${cinema.id}`}
-                className="group flex items-center justify-between border border-zinc-200 bg-zinc-50 p-4 transition hover:border-[#e50914]/70 hover:bg-white dark:border-white/5 dark:bg-black/35 dark:hover:bg-black/60"
+                className="group flex items-center justify-between gap-3 border border-zinc-200 bg-zinc-50 p-3 transition hover:border-[#e50914]/70 hover:bg-white sm:p-4 dark:border-white/5 dark:bg-black/35 dark:hover:bg-black/60"
               >
-                <div className="flex items-center gap-4">
-                  <span className="text-2xl font-black italic text-zinc-300 transition group-hover:text-[#e50914] dark:text-white/15">
+                <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                  <span className="text-xl font-black italic text-zinc-300 transition group-hover:text-[#e50914] sm:text-2xl dark:text-white/15">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <div>
-                    <h3 className="text-sm font-extrabold uppercase text-zinc-950 dark:text-white">
+                    <h3 className="line-clamp-2 text-sm font-extrabold uppercase text-zinc-950 dark:text-white">
                       {cinema.name}
                     </h3>
 
-                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="mt-1 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">
                       {cinema.address} • {cinema.distance}
                     </p>
                   </div>
@@ -79,7 +81,7 @@ export function NearbyCinemasSection() {
 
           <Link
             href="/cinemas"
-            className="mt-7 inline-flex h-11 items-center justify-center border border-[#e50914] px-5 text-xs font-extrabold uppercase text-zinc-950 transition hover:bg-[#e50914] hover:text-white dark:text-white"
+            className="mt-7 inline-flex h-11 w-full items-center justify-center border border-[#e50914] px-5 text-xs font-extrabold uppercase text-zinc-950 transition hover:bg-[#e50914] hover:text-white sm:w-auto dark:text-white"
           >
             Tìm tất cả các rạp
           </Link>
@@ -90,7 +92,7 @@ export function NearbyCinemasSection() {
           whileInView={{ opacity: 1, x: 0, scale: 1 }}
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-          className="relative flex min-h-[380px] items-center justify-center overflow-hidden bg-zinc-200 ring-1 ring-black/10 dark:bg-[#202424] dark:ring-white/10"
+          className="relative flex min-h-[220px] items-center justify-center overflow-hidden bg-zinc-200 ring-1 ring-black/10 sm:min-h-[340px] lg:min-h-[380px] dark:bg-[#202424] dark:ring-white/10"
         >
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.06)_1px,transparent_1px),linear-gradient(0deg,rgba(0,0,0,0.06)_1px,transparent_1px)] bg-[size:46px_46px] opacity-35 dark:bg-[linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.05)_1px,transparent_1px)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(229,9,20,0.14),transparent_38%)] dark:bg-[radial-gradient(circle_at_center,rgba(229,9,20,0.18),transparent_38%)]" />
@@ -105,7 +107,7 @@ export function NearbyCinemasSection() {
             </p>
           </div>
         </motion.div>
-      </div>
+      </PageContainer>
     </section>
   );
 }

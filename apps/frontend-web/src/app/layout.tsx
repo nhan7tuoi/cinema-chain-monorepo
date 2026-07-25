@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro } from "next/font/google";
 
 import { FooterLayout } from "@/components/common/layout/footer";
 import { HeaderLayout } from "@/components/common/layout/header";
+import { MobileBottomNav } from "@/components/common/layout/bottom-nav";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <body
-        className={`${beVietnamPro.variable} flex min-h-screen flex-col bg-background font-sans text-foreground antialiased`}
+        className={`${beVietnamPro.variable} flex min-h-screen overflow-x-hidden flex-col bg-background font-sans text-foreground antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -37,8 +38,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
           disableTransitionOnChange
         >
           <HeaderLayout />
-          <div className="flex-1">{children}</div>
+          <div className="flex min-w-0 flex-1 flex-col">{children}</div>
           <FooterLayout />
+          <MobileBottomNav />
         </ThemeProvider>
       </body>
     </html>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Star } from "lucide-react";
+import { PageContainer } from "@/components/common/layout/page-shell";
+import { ResponsiveText } from "@/components/common/typography";
 import { getTrendingMovies } from "../api/home.api";
 import type { HomeMovie } from "../types/home.types";
 
@@ -58,18 +60,18 @@ export function TrendingMoviesSection() {
   }, [isNearViewport, hasLoaded]);
 
   return (
-    <section ref={sectionRef} className="relative bg-zinc-50 py-20 text-zinc-950 dark:bg-[#050606] dark:text-white">
+    <section ref={sectionRef} className="relative bg-zinc-50 py-12 text-zinc-950 sm:py-16 lg:py-20 dark:bg-[#050606] dark:text-white">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10" />
 
-      <div className="mx-auto max-w-[1440px] px-6 lg:px-16">
-        <div className="mb-8 flex items-end justify-between">
+      <PageContainer>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#e50914]">
+            <ResponsiveText variant="eyebrow">
               Đang được quan tâm
-            </p>
-            <h2 className="mt-3 text-4xl font-black uppercase italic leading-none text-zinc-950 dark:text-white">
+            </ResponsiveText>
+            <ResponsiveText as="h2" variant="sectionTitle" className="mt-3 lg:text-4xl">
               Xu hướng hiện nay
-            </h2>
+            </ResponsiveText>
           </div>
 
           <Link
@@ -81,11 +83,11 @@ export function TrendingMoviesSection() {
         </div>
 
         {isLoading && movies.length === 0 ? (
-          <div className="flex gap-5 overflow-hidden">
+          <div className="flex gap-3 overflow-hidden sm:gap-5">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
-                className="h-[360px] min-w-[220px] animate-pulse bg-zinc-200 dark:bg-white/[0.07]"
+                className="h-[280px] min-w-[156px] animate-pulse bg-zinc-200 min-[390px]:min-w-[170px] sm:h-[360px] sm:min-w-[220px] dark:bg-white/[0.07]"
               />
             ))}
           </div>
@@ -93,19 +95,19 @@ export function TrendingMoviesSection() {
 
         {movies.length > 0 ? (
           <motion.div
-            className="-mx-2 flex gap-5 overflow-x-auto px-2 pb-6 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-6 pt-2 [scrollbar-width:none] sm:-mx-2 sm:gap-5 sm:px-2 [&::-webkit-scrollbar]:hidden"
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.22 }}
             variants={listVariants}
           >
-            {movies.map((movie, index) => {
+            {movies.map((movie) => {
               const imageUrl = movie.posterUrl || movie.backdropUrl || "/window.svg";
 
               return (
                 <motion.article
                   key={movie.id}
-                  className="group relative min-w-[220px]"
+                  className="group relative min-w-[156px] snap-start min-[390px]:min-w-[170px] sm:min-w-[220px]"
                   variants={cardVariants}
                   transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
                 >
@@ -115,7 +117,7 @@ export function TrendingMoviesSection() {
                         src={imageUrl}
                         alt={movie.title}
                         fill
-                        sizes="220px"
+                        sizes="(max-width: 640px) 46vw, 220px"
                         className="object-cover transition duration-700 group-hover:scale-110"
                       />
 
@@ -145,7 +147,7 @@ export function TrendingMoviesSection() {
             })}
           </motion.div>
         ) : null}
-      </div>
+      </PageContainer>
     </section>
   );
 }

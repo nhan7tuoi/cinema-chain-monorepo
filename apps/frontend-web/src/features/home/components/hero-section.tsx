@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Play, Ticket } from "lucide-react";
+import { PageContainer } from "@/components/common/layout/page-shell";
+import { ResponsiveText } from "@/components/common/typography";
 import { HomeMovie } from "../types/home.types";
 
 type HeroSectionProps = {
@@ -15,14 +17,14 @@ const SLIDE_DURATION = 11000;
 
 function getTitleSizeClass(title: string) {
   if (title.length > 52) {
-    return "max-w-[860px] text-[clamp(2.45rem,4.2vw,4.2rem)]";
+    return "max-w-[860px] text-[1.7rem] min-[390px]:text-[1.95rem] sm:text-5xl lg:text-6xl";
   }
 
   if (title.length > 32) {
-    return "max-w-[760px] text-[clamp(2.85rem,5.2vw,5.15rem)]";
+    return "max-w-[760px] text-[1.95rem] min-[390px]:text-[2.2rem] sm:text-6xl lg:text-7xl";
   }
 
-  return "max-w-[640px] text-[clamp(3.25rem,7vw,6.5rem)]";
+  return "max-w-[640px] text-[2.2rem] min-[390px]:text-[2.6rem] sm:text-7xl lg:text-8xl";
 }
 
 export function HeroSection({ movies }: HeroSectionProps) {
@@ -34,7 +36,8 @@ export function HeroSection({ movies }: HeroSectionProps) {
     [movies],
   );
 
-  const activeMovie = heroMovies[activeIndex] ?? heroMovies[0];
+  const safeActiveIndex = heroMovies.length > 0 ? activeIndex % heroMovies.length : 0;
+  const activeMovie = heroMovies[safeActiveIndex];
 
   useEffect(() => {
     if (shouldReduceMotion || heroMovies.length <= 1) return;
@@ -45,12 +48,6 @@ export function HeroSection({ movies }: HeroSectionProps) {
 
     return () => window.clearInterval(timer);
   }, [heroMovies.length, shouldReduceMotion]);
-
-  useEffect(() => {
-    if (activeIndex > heroMovies.length - 1) {
-      setActiveIndex(0);
-    }
-  }, [activeIndex, heroMovies.length]);
 
   if (!activeMovie) return null;
 
@@ -65,7 +62,7 @@ export function HeroSection({ movies }: HeroSectionProps) {
   }
 
   return (
-    <section className="relative min-h-svh overflow-hidden bg-black">
+    <section className="relative min-h-[calc(100svh-4rem)] w-full overflow-hidden bg-black sm:min-h-[calc(100svh-5rem)]">
       <AnimatePresence mode="wait">
         <motion.div
           key={activeMovie.id}
@@ -79,51 +76,54 @@ export function HeroSection({ movies }: HeroSectionProps) {
             src={backdrop}
             alt={activeMovie.title}
             fill
-            priority={activeIndex === 0}
+            priority={safeActiveIndex === 0}
             sizes="100vw"
-            className="object-cover object-center opacity-95"
+            className="object-cover object-[58%_center] opacity-95 sm:object-center"
           />
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_42%,rgba(229,9,20,0.28),transparent_30%),linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.82)_34%,rgba(0,0,0,0.22)_72%),linear-gradient(0deg,#050606_0%,rgba(5,6,6,0.92)_8%,rgba(5,6,6,0)_42%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.28)_0%,rgba(0,0,0,0.22)_32%,rgba(0,0,0,0.92)_84%),linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.44)_68%,rgba(0,0,0,0.22)_100%)] sm:bg-[radial-gradient(circle_at_74%_42%,rgba(229,9,20,0.28),transparent_30%),linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.82)_34%,rgba(0,0,0,0.22)_72%),linear-gradient(0deg,#050606_0%,rgba(5,6,6,0.92)_8%,rgba(5,6,6,0)_42%)]" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#e50914]/70 to-transparent" />
 
-      <div className="relative mx-auto flex min-h-svh max-w-[1440px] items-center px-6 pb-24 pt-28 lg:px-16 lg:pb-24 lg:pt-32">
+      <PageContainer className="relative flex min-h-[calc(100svh-4rem)] min-w-0 items-end pb-28 pt-24 sm:min-h-[calc(100svh-5rem)] sm:items-center sm:pb-24 sm:pt-28 lg:pb-24 lg:pt-32">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeMovie.id}
-            className="max-w-[660px]"
+            className="w-full min-w-0 max-w-[660px] pb-4 sm:pb-0"
             initial={shouldReduceMotion ? false : { opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? undefined : { opacity: 0, y: -18 }}
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="mb-5 flex items-center gap-2 text-[11px] font-extrabold uppercase">
-              <span className="bg-[#e50914] px-2.5 py-1 text-white">IMAX</span>
-              <span className="border border-white/15 bg-white/10 px-2.5 py-1 text-zinc-200 backdrop-blur">
+            <div className="mb-3 flex max-w-full flex-wrap items-center gap-1.5 text-[8px] font-extrabold uppercase sm:mb-5 sm:gap-2 sm:text-[11px]">
+              <span className="bg-[#e50914] px-2 py-1 text-white sm:px-2.5">IMAX</span>
+              <span className="border border-white/15 bg-black/25 px-2 py-1 text-zinc-200 backdrop-blur sm:bg-white/10 sm:px-2.5">
                 Dolby Cinema
               </span>
-              <span className="ml-2 text-[#ff1f2d]">• Phim hot</span>
+              <span className="text-[#ff1f2d] sm:ml-2">• Phim hot</span>
             </div>
 
-            <h1
-              className={`font-black uppercase italic leading-[0.88] tracking-normal text-white drop-shadow-2xl ${getTitleSizeClass(
-                activeMovie.title,
-              )}`}
+            <ResponsiveText
+              as="h1"
+              variant="heroTitle"
+              className={getTitleSizeClass(activeMovie.title)}
             >
               {activeMovie.title}
-            </h1>
+            </ResponsiveText>
 
-            <p className="mt-5 max-w-[560px] text-[clamp(0.95rem,1.1vw,1rem)] font-medium leading-7 text-zinc-300">
+            <ResponsiveText
+              variant="body"
+              className="mt-3 line-clamp-3 max-w-[560px] text-[0.82rem] leading-6 text-zinc-200 sm:mt-5 sm:line-clamp-none sm:text-base"
+            >
               {activeMovie.synopsis ||
                 "Trải nghiệm hành trình điện ảnh mãn nhãn với âm thanh, hình ảnh và cảm xúc được đẩy lên tối đa."}
-            </p>
+            </ResponsiveText>
 
-            <div className="mt-7 flex items-center gap-4">
+            <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5 sm:mt-7 sm:max-w-none sm:flex-row sm:items-center sm:gap-4">
               <Link
                 href={`/tickets?movieId=${activeMovie.id}`}
-                className="inline-flex h-12 items-center gap-2 bg-[#e50914] px-7 text-sm font-extrabold uppercase text-white shadow-[0_18px_46px_rgba(229,9,20,0.35)] transition hover:-translate-y-0.5 hover:bg-[#ff1f2d]"
+                className="inline-flex h-11 min-w-0 items-center justify-center gap-2 bg-[#e50914] px-4 text-xs font-extrabold uppercase text-white shadow-[0_18px_46px_rgba(229,9,20,0.35)] transition hover:-translate-y-0.5 hover:bg-[#ff1f2d] sm:h-12 sm:px-7 sm:text-sm"
               >
                 <Ticket className="size-4" />
                 Đặt vé ngay
@@ -132,7 +132,7 @@ export function HeroSection({ movies }: HeroSectionProps) {
               {activeMovie.trailerUrl ? (
                 <a
                   href={activeMovie.trailerUrl}
-                  className="inline-flex h-12 items-center gap-2 border border-white/20 bg-white/10 px-7 text-sm font-extrabold uppercase text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15"
+                  className="inline-flex h-10 min-w-0 items-center justify-center gap-2 border border-white/15 bg-white/10 px-4 text-xs font-extrabold uppercase text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/15 sm:h-12 sm:px-7 sm:text-sm"
                 >
                   <Play className="size-4 fill-current" />
                   Xem trailer
@@ -141,10 +141,10 @@ export function HeroSection({ movies }: HeroSectionProps) {
             </div>
           </motion.div>
         </AnimatePresence>
-      </div>
+      </PageContainer>
 
       {heroMovies.length > 1 ? (
-        <div className="absolute inset-x-0 bottom-8 z-10 mx-auto flex max-w-[1440px] items-end justify-between px-6 lg:px-16">
+        <PageContainer className="absolute inset-x-0 bottom-4 z-10 hidden items-end justify-between sm:flex sm:bottom-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -167,7 +167,7 @@ export function HeroSection({ movies }: HeroSectionProps) {
 
           <div className="hidden w-[420px] gap-3 md:flex">
             {heroMovies.map((movie, index) => {
-              const isActive = index === activeIndex;
+              const isActive = index === safeActiveIndex;
 
               return (
                 <button
@@ -195,7 +195,7 @@ export function HeroSection({ movies }: HeroSectionProps) {
               );
             })}
           </div>
-        </div>
+        </PageContainer>
       ) : null}
     </section>
   );

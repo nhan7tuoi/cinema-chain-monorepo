@@ -86,13 +86,13 @@ export class MoviesService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     return this.prisma.movie.findUnique({
       where: { id },
     });
   }
 
-  async update(id: string, updateMovieDto: UpdateMovieDto) {
+  async update(id: number, updateMovieDto: UpdateMovieDto) {
     this.logger.log(`Updating movie: ${id}`);
     
     const oldMovie = await this.prisma.movie.findUnique({
@@ -115,5 +115,88 @@ export class MoviesService {
       where: { id },
       data: updateMovieDto,
     });
+  }
+
+  async createReview(movieId: number, userId: number, dto: { rating: number; content?: string }) {
+    const customer = await this.prisma.customer.findUnique({
+      where: { userId },
+    });
+
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+
+    const review = await this.prisma.review.create({
+      data: {
+        movieId,
+        customerId: customer.id,
+        rating: dto.rating,
+        content: dto.content,
+      },
+    });
+
+    // Cập nhật điểm trung bình của phim
+    const movieStats = await this.prisma.review.aggregate({
+      where: { movieId },
+      _avg: { rating: true },
+      _count: { id: true },
+    });
+
+    await this.prisma.movie.update({
+      where: { id: movieId },
+      data: {
+        averageRating: movieStats._avg.rating || 0,
+        ratingCount: movieStats._count.id,
+      },
+    });
+
+    return review;
+  }
+
+  async getReviews(movieId: number, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const [reviews, total] = await Promise.all([
+      this.prisma.review.findMany({
+        where: { movieId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          customer: {
+            select: {
+              fullName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      }),
+      this.prisma.review.count({ where: { movieId } }),
+    ]);
+
+    // Phân bổ xếp hạng
+    const distributionRaw = await this.prisma.review.groupBy({
+      by: ['rating'],
+      where: { movieId },
+      _count: {
+        rating: true,
+      },
+    });
+
+    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    distributionRaw.forEach(item => {
+      distribution[item.rating as keyof typeof distribution] = item._count.rating;
+    });
+
+    return {
+      reviews,
+      distribution,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

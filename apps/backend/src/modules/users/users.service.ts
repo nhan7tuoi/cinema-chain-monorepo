@@ -24,7 +24,7 @@ export class UsersService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -44,7 +44,7 @@ export class UsersService {
     });
   }
 
-  async updateProfile(userId: string, data: { fullName?: string; avatarUrl?: string }) {
+  async updateProfile(userId: number, data: { fullName?: string; avatarUrl?: string }) {
     const user = await this.findByEmail(
       (await this.findById(userId))?.email || ''
     );

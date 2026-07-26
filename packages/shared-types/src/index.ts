@@ -5,7 +5,7 @@ export type ShowtimeSeatStatus = 'AVAILABLE' | 'HOLDING' | 'SOLD';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 
 export interface IUser {
-  id: string;
+  id: number;
   phone_number: string;
   email?: string;
   full_name: string;
@@ -29,14 +29,14 @@ export interface IAuthResponse {
   accessToken: string;
   refreshToken: string;
   user: {
-    id: string;
+    id: number;
     email: string | null;
     userType: string;
     fullName: string;
     avatarUrl?: string | null;
     roles: string[];
     permissions: string[];
-    branchId?: string | null;
+    branchId?: number | null;
     branchName?: string | null;
   };
 }
@@ -49,14 +49,14 @@ export interface IJwtPayload {
   sub: string;
   email: string | null;
   userType: string;
-  branchId?: string | null;
+  branchId?: number | null;
   branchName?: string | null;
 }
 
 export interface IUserContext {
-  userId: string;
+  userId: number;
   email: string | null;
   userType: string;
-  branchId?: string | null;
+  branchId?: number | null;
   branchName?: string | null;
 }

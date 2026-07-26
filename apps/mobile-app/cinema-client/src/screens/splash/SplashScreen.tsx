@@ -9,6 +9,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
+import { splashStyles as styles } from './styles';
 
 const { width, height } = Dimensions.get('window');
 const CIRCLE_SIZE = 150;
@@ -91,39 +92,6 @@ const SplashScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  circleContainer: {
-    position: 'absolute',
-    width: CIRCLE_SIZE,
-    height: CIRCLE_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  textContainer: {
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  title: {
-    fontSize: 42,
-    fontWeight: 'bold',
-  },
-  titleWhite: {
-    color: '#E5E5EA',
-  },
-  titleRed: {
-    color: '#D21E27',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#999999',
-    marginTop: 4,
-  },
-});
+
 
 export default SplashScreen;

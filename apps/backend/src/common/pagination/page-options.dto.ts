@@ -18,7 +18,7 @@ export class PageOptionsDto {
   @IsOptional()
   readonly search?: string;
 
-  @IsString()
+  @IsInt()
   @IsOptional()
-  readonly branchId?: string;
+  readonly branchId?: number;
 }

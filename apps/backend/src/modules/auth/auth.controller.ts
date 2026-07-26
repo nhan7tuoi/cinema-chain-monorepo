@@ -49,7 +49,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Đăng xuất khỏi hệ thống' })
   @ApiResponse({ status: 200, description: 'Đăng xuất thành công, xoá Refresh Token' })
-  async logout(@CurrentUser('userId') userId: string) {
+  async logout(@CurrentUser('userId') userId: number) {
     await this.authService.logout(userId);
     return { message: 'Đăng xuất thành công' };
   }

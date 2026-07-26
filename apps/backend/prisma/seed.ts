@@ -32,12 +32,19 @@ function buildSeedSeats(rowCount: number, colCount: number) {
     const isCoupleRow = row === rowCount - 1 && colCount >= 8;
 
     for (let col = 1; col <= colCount; col++) {
-      if (!isCoupleRow && colCount >= 12 && (col === Math.ceil(colCount / 3) || col === Math.ceil((colCount / 3) * 2))) {
+      if (
+        !isCoupleRow &&
+        colCount >= 12 &&
+        (col === Math.ceil(colCount / 3) ||
+          col === Math.ceil((colCount / 3) * 2))
+      ) {
         continue;
       }
 
       const isVip = !isCoupleRow && row >= Math.max(rowCount - 3, 0);
-      const couplePairId = isCoupleRow ? `couple-${rowLabel}-${Math.ceil(col / 2)}` : undefined;
+      const couplePairId = isCoupleRow
+        ? `couple-${rowLabel}-${Math.ceil(col / 2)}`
+        : undefined;
 
       seats.push({
         rowLabel,
@@ -45,7 +52,11 @@ function buildSeedSeats(rowCount: number, colCount: number) {
         code: `${rowLabel}${col}`,
         gridRow: row,
         gridCol: col,
-        type: isCoupleRow ? SeatType.COUPLE : isVip ? SeatType.VIP : SeatType.STANDARD,
+        type: isCoupleRow
+          ? SeatType.COUPLE
+          : isVip
+            ? SeatType.VIP
+            : SeatType.STANDARD,
         status: SeatStatus.ACTIVE,
         couplePairId,
       });
@@ -75,7 +86,7 @@ async function seedPermissions() {
     { code: 'delete', name: 'Delete' },
   ];
 
-  const permissions: { code: string; id: string }[] = [];
+  const permissions: { code: string; id: number }[] = [];
 
   for (const module of modules) {
     for (const action of actions) {
@@ -102,7 +113,7 @@ async function seedPermissions() {
   return permissions;
 }
 
-async function seedRoles(allPermissions: { code: string; id: string }[]) {
+async function seedRoles(allPermissions: { code: string; id: number }[]) {
   const rolesData = [
     { code: 'SUPER_ADMIN', name: 'Super Admin', desc: 'Full system access.' },
     { code: 'ADMIN', name: 'Admin', desc: 'System administrator.' },
@@ -111,7 +122,7 @@ async function seedRoles(allPermissions: { code: string; id: string }[]) {
     { code: 'CUSTOMER', name: 'Customer', desc: 'Cinema customer.' },
   ];
 
-  const roles: Record<string, string> = {};
+  const roles: Record<string, number> = {};
 
   for (const roleData of rolesData) {
     const role = await prisma.role.upsert({
@@ -132,9 +143,22 @@ async function seedRoles(allPermissions: { code: string; id: string }[]) {
     roles[role.code] = role.id;
   }
 
-  const managerPermissions = allPermissions.filter((permission) => !permission.code.startsWith('role:') && !permission.code.startsWith('config:'));
-  const staffPermissionCodes = ['dashboard:read', 'movie:read', 'showtime:read', 'ticket:read', 'ticket:create', 'ticket:update'];
-  const staffPermissions = allPermissions.filter((permission) => staffPermissionCodes.includes(permission.code));
+  const managerPermissions = allPermissions.filter(
+    (permission) =>
+      !permission.code.startsWith('role:') &&
+      !permission.code.startsWith('config:'),
+  );
+  const staffPermissionCodes = [
+    'dashboard:read',
+    'movie:read',
+    'showtime:read',
+    'ticket:read',
+    'ticket:create',
+    'ticket:update',
+  ];
+  const staffPermissions = allPermissions.filter((permission) =>
+    staffPermissionCodes.includes(permission.code),
+  );
 
   const rolePermissionMap = {
     SUPER_ADMIN: allPermissions,
@@ -144,7 +168,9 @@ async function seedRoles(allPermissions: { code: string; id: string }[]) {
   };
 
   for (const [roleCode, permissions] of Object.entries(rolePermissionMap)) {
-    await prisma.rolePermission.deleteMany({ where: { roleId: roles[roleCode] } });
+    await prisma.rolePermission.deleteMany({
+      where: { roleId: roles[roleCode] },
+    });
     await prisma.rolePermission.createMany({
       data: permissions.map((permission) => ({
         roleId: roles[roleCode],
@@ -189,7 +215,7 @@ async function seedBranches() {
     },
   ];
 
-  const savedBranches: { id: string }[] = [];
+  const savedBranches: { id: number }[] = [];
 
   for (const branch of branches) {
     const savedBranch = await prisma.branch.upsert({
@@ -204,7 +230,7 @@ async function seedBranches() {
   return savedBranches;
 }
 
-async function seedAuditoriums(branchId: string) {
+async function seedAuditoriums(branchId: number) {
   const auditoriumSeeds = [
     { name: 'Room 01', format: 'IMAX Laser', layoutRows: 7, layoutCols: 14 },
     { name: 'Room 02', format: 'Dolby Cinema', layoutRows: 7, layoutCols: 12 },
@@ -237,7 +263,9 @@ async function seedAuditoriums(branchId: string) {
       },
     });
 
-    await prisma.seat.deleteMany({ where: { auditoriumId: savedAuditorium.id } });
+    await prisma.seat.deleteMany({
+      where: { auditoriumId: savedAuditorium.id },
+    });
     await prisma.seat.createMany({
       data: seats.map((seat) => ({
         ...seat,
@@ -260,16 +288,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-10'),
       endDate: new Date('2026-09-10'),
       format: '2D',
-      synopsis: 'Câu chuyện chiến tranh và tuổi trẻ được kể qua những khoảnh khắc đầy cảm xúc trên màn ảnh rộng.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753663/cinema/movies/mua-do.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754598/cinema/movies/hero/hero-mua-do.png',
+      synopsis:
+        'Câu chuyện chiến tranh và tuổi trẻ được kể qua những khoảnh khắc đầy cảm xúc trên màn ảnh rộng.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753663/cinema/movies/mua-do.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754598/cinema/movies/hero/hero-mua-do.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T13',
       language: 'Tiếng Việt',
       subtitle: 'Phụ đề tiếng Anh',
       country: 'Việt Nam',
-      averageRating: 8.7,
-      ratingCount: 820,
       viewCount: 52000,
       isFeatured: true,
       featuredOrder: 1,
@@ -286,16 +315,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-03'),
       endDate: new Date('2026-08-20'),
       format: '2D',
-      synopsis: 'Một nhóm bạn vô tình cuốn vào những bí mật kỳ quái trong chuyến đi đầy tiếng cười và sợ hãi.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753664/cinema/movies/dong-dao-ma-quai.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754600/cinema/movies/hero/hero-dong-dao-ma-quai.png',
+      synopsis:
+        'Một nhóm bạn vô tình cuốn vào những bí mật kỳ quái trong chuyến đi đầy tiếng cười và sợ hãi.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753664/cinema/movies/dong-dao-ma-quai.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754600/cinema/movies/hero/hero-dong-dao-ma-quai.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T16',
       language: 'Tiếng Việt',
       subtitle: 'Phụ đề tiếng Anh',
       country: 'Việt Nam',
-      averageRating: 8.2,
-      ratingCount: 640,
       viewCount: 47000,
       isFeatured: true,
       featuredOrder: 2,
@@ -312,16 +342,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-03'),
       endDate: new Date('2026-08-25'),
       format: '2D',
-      synopsis: 'Sự giao thoa tín ngưỡng tâm linh Hàn - Nhật mở ra chuỗi ám ảnh khi kẻ phạm đền thiêng phải trả giá.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753665/cinema/movies/den-la-sat.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754601/cinema/movies/hero/hero-den-la-sat.png',
+      synopsis:
+        'Sự giao thoa tín ngưỡng tâm linh Hàn - Nhật mở ra chuỗi ám ảnh khi kẻ phạm đền thiêng phải trả giá.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753665/cinema/movies/den-la-sat.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754601/cinema/movies/hero/hero-den-la-sat.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T18',
       language: 'Tiếng Hàn',
       subtitle: 'Phụ đề tiếng Việt',
       country: 'Hàn Quốc',
-      averageRating: 8.0,
-      ratingCount: 510,
       viewCount: 43000,
       isFeatured: true,
       featuredOrder: 3,
@@ -338,16 +369,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-18'),
       endDate: new Date('2026-09-18'),
       format: '2D',
-      synopsis: 'Câu chuyện thần thoại Hàn Quốc ly kỳ được đưa lên màn ảnh rộng với màu sắc sân khấu rực rỡ và giàu tính giải trí.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754594/cinema/movies/hero/hero-trang-quynh-nhi.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754594/cinema/movies/hero/hero-trang-quynh-nhi.png',
+      synopsis:
+        'Câu chuyện thần thoại Hàn Quốc ly kỳ được đưa lên màn ảnh rộng với màu sắc sân khấu rực rỡ và giàu tính giải trí.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754594/cinema/movies/hero/hero-trang-quynh-nhi.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754594/cinema/movies/hero/hero-trang-quynh-nhi.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'P',
       language: 'Tiếng Việt',
       subtitle: 'Không phụ đề',
       country: 'Việt Nam',
-      averageRating: 8.5,
-      ratingCount: 690,
       viewCount: 64000,
       isFeatured: true,
       featuredOrder: 4,
@@ -364,16 +396,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-10'),
       endDate: new Date('2026-09-10'),
       format: '2D',
-      synopsis: 'Một nghi lễ bí mật đánh thức những linh hồn không yên nghỉ, đẩy cả nhóm vào đêm kinh hoàng không lối thoát.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754595/cinema/movies/hero/hero-quy-bat-hon.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754595/cinema/movies/hero/hero-quy-bat-hon.png',
+      synopsis:
+        'Một nghi lễ bí mật đánh thức những linh hồn không yên nghỉ, đẩy cả nhóm vào đêm kinh hoàng không lối thoát.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754595/cinema/movies/hero/hero-quy-bat-hon.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754595/cinema/movies/hero/hero-quy-bat-hon.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T18',
       language: 'Tiếng Việt',
       subtitle: 'Phụ đề tiếng Anh',
       country: 'Việt Nam',
-      averageRating: 8.1,
-      ratingCount: 520,
       viewCount: 54000,
       isFeatured: true,
       featuredOrder: 5,
@@ -390,16 +423,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-25'),
       endDate: new Date('2026-09-30'),
       format: '2D',
-      synopsis: 'Biệt đội Minions quay lại với một phiêu lưu hỗn loạn, hài hước và tràn ngập những quái vật đáng yêu.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754596/cinema/movies/hero/hero-minions-va-quai-vat.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754599/cinema/movies/hero/hero-minions-tran-thanh.png',
+      synopsis:
+        'Biệt đội Minions quay lại với một phiêu lưu hỗn loạn, hài hước và tràn ngập những quái vật đáng yêu.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754596/cinema/movies/hero/hero-minions-va-quai-vat.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783754599/cinema/movies/hero/hero-minions-tran-thanh.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'P',
       language: 'Tiếng Anh',
       subtitle: 'Lồng tiếng Việt',
       country: 'Mỹ',
-      averageRating: 8.4,
-      ratingCount: 880,
       viewCount: 82000,
       isFeatured: true,
       featuredOrder: 6,
@@ -416,16 +450,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-03'),
       endDate: new Date('2026-08-18'),
       format: '2D',
-      synopsis: 'Dục vọng phải sám hối, quỷ dữ đến hỏi tội trong kiệt tác kinh dị được mong chờ.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753666/cinema/movies/bong-quy.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753666/cinema/movies/bong-quy.png',
+      synopsis:
+        'Dục vọng phải sám hối, quỷ dữ đến hỏi tội trong kiệt tác kinh dị được mong chờ.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753666/cinema/movies/bong-quy.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753666/cinema/movies/bong-quy.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T18',
       language: 'Tiếng Anh',
       subtitle: 'Phụ đề tiếng Việt',
       country: 'Mỹ',
-      averageRating: 8.1,
-      ratingCount: 570,
       viewCount: 45000,
       isFeatured: false,
       featuredOrder: null,
@@ -442,16 +477,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-25'),
       endDate: new Date('2026-09-12'),
       format: '2D',
-      synopsis: 'Lấy người âm binh, hồi sinh gia tộc: một nghi lễ tăm tối mở ra chuỗi bi kịch khó thoát.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753667/cinema/movies/minh-hon-trong-long-dat.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753667/cinema/movies/minh-hon-trong-long-dat.png',
+      synopsis:
+        'Lấy người âm binh, hồi sinh gia tộc: một nghi lễ tăm tối mở ra chuỗi bi kịch khó thoát.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753667/cinema/movies/minh-hon-trong-long-dat.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753667/cinema/movies/minh-hon-trong-long-dat.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T18',
       language: 'Tiếng Việt',
       subtitle: 'Phụ đề tiếng Anh',
       country: 'Việt Nam',
-      averageRating: 7.9,
-      ratingCount: 430,
       viewCount: 39000,
       isFeatured: true,
       featuredOrder: 7,
@@ -468,16 +504,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-18'),
       endDate: new Date('2026-09-05'),
       format: '2D',
-      synopsis: 'Một phi vụ bất ngờ đưa những con người trái ngược vào hành trình vừa nguy hiểm vừa đầy tiếng cười.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753668/cinema/movies/tung-hoanh-tu-hai.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753668/cinema/movies/tung-hoanh-tu-hai.png',
+      synopsis:
+        'Một phi vụ bất ngờ đưa những con người trái ngược vào hành trình vừa nguy hiểm vừa đầy tiếng cười.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753668/cinema/movies/tung-hoanh-tu-hai.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753668/cinema/movies/tung-hoanh-tu-hai.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T16',
       language: 'Tiếng Việt',
       subtitle: 'Phụ đề tiếng Anh',
       country: 'Việt Nam',
-      averageRating: 8.3,
-      ratingCount: 760,
       viewCount: 61000,
       isFeatured: false,
       featuredOrder: null,
@@ -494,16 +531,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-24'),
       endDate: new Date('2026-09-24'),
       format: '2D',
-      synopsis: 'Conan và nhóm bạn đối mặt một vụ án mới với những màn suy luận căng thẳng và bất ngờ.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753669/cinema/movies/conan-tham-tu-lung-danh.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753669/cinema/movies/conan-tham-tu-lung-danh.png',
+      synopsis:
+        'Conan và nhóm bạn đối mặt một vụ án mới với những màn suy luận căng thẳng và bất ngờ.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753669/cinema/movies/conan-tham-tu-lung-danh.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753669/cinema/movies/conan-tham-tu-lung-danh.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'P',
       language: 'Tiếng Nhật',
       subtitle: 'Phụ đề tiếng Việt',
       country: 'Nhật Bản',
-      averageRating: 8.6,
-      ratingCount: 920,
       viewCount: 73000,
       isFeatured: false,
       featuredOrder: null,
@@ -520,16 +558,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-08-01'),
       endDate: new Date('2026-09-20'),
       format: '2D',
-      synopsis: 'Khai đàn gọi hồn, đánh thức ác linh trong căn nhà họ Hứa với lời nguyền chưa từng ngủ yên.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753670/cinema/movies/lau-chua.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753670/cinema/movies/lau-chua.png',
+      synopsis:
+        'Khai đàn gọi hồn, đánh thức ác linh trong căn nhà họ Hứa với lời nguyền chưa từng ngủ yên.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753670/cinema/movies/lau-chua.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753670/cinema/movies/lau-chua.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T18',
       language: 'Tiếng Việt',
       subtitle: 'Phụ đề tiếng Anh',
       country: 'Việt Nam',
-      averageRating: 8.0,
-      ratingCount: 480,
       viewCount: 41000,
       isFeatured: false,
       featuredOrder: null,
@@ -546,16 +585,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-07-26'),
       endDate: new Date('2026-09-10'),
       format: '2D',
-      synopsis: 'Một biến cố trong quá khứ trở lại qua những đoạn ký ức đứt gãy, đẩy nhân vật chính vào nỗi sợ không lối thoát.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753670/cinema/movies/am-anh.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753670/cinema/movies/am-anh.png',
+      synopsis:
+        'Một biến cố trong quá khứ trở lại qua những đoạn ký ức đứt gãy, đẩy nhân vật chính vào nỗi sợ không lối thoát.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753670/cinema/movies/am-anh.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753670/cinema/movies/am-anh.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T16',
       language: 'Tiếng Việt',
       subtitle: 'Phụ đề tiếng Anh',
       country: 'Việt Nam',
-      averageRating: 7.8,
-      ratingCount: 360,
       viewCount: 33000,
       isFeatured: false,
       featuredOrder: null,
@@ -572,16 +612,17 @@ async function seedMovies() {
       releaseDate: new Date('2026-08-08'),
       endDate: new Date('2026-09-30'),
       format: '2D',
-      synopsis: 'Phía đánh ghen chấn động nhất màn ảnh Việt trong không khí phòng trà rực rỡ, nhiều tham vọng và bí mật.',
-      posterUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753671/cinema/movies/tranh-vac.png',
-      backdropUrl: 'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753671/cinema/movies/tranh-vac.png',
+      synopsis:
+        'Phía đánh ghen chấn động nhất màn ảnh Việt trong không khí phòng trà rực rỡ, nhiều tham vọng và bí mật.',
+      posterUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753671/cinema/movies/tranh-vac.png',
+      backdropUrl:
+        'https://res.cloudinary.com/dvsuhb9cj/image/upload/v1783753671/cinema/movies/tranh-vac.png',
       trailerUrl: 'https://www.youtube.com',
       ageRating: 'T13',
       language: 'Tiếng Việt',
       subtitle: 'Phụ đề tiếng Anh',
       country: 'Việt Nam',
-      averageRating: 8.4,
-      ratingCount: 700,
       viewCount: 58000,
       isFeatured: false,
       featuredOrder: null,
@@ -620,6 +661,63 @@ async function seedMovies() {
   }
 }
 
+async function seedReviews() {
+  console.log('Seeding reviews...');
+  await prisma.review.deleteMany({});
+
+  const movies = await prisma.movie.findMany();
+  const customers = await prisma.customer.findMany();
+
+  if (customers.length === 0 || movies.length === 0) return;
+
+  const reviewsData: any[] = [];
+  const contents = [
+    'Phim rất hay, đáng xem!',
+    'Hơi thất vọng về cái kết, nhưng kỹ xảo tốt.',
+    'Diễn viên diễn xuất tuyệt vời.',
+    'Tuyệt phẩm, sẽ đi xem lại!',
+    'Nội dung bình thường, không có gì đặc sắc.',
+    'Cảm động quá, khóc hết nước mắt.',
+    'Phim giải trí tốt cho cuối tuần.',
+    'Kịch bản còn nhiều lỗ hổng nhưng hình ảnh đẹp.',
+    'Nhạc phim quá đỉnh!',
+    'Không bõ tiền vé, khá nhàm chán.',
+  ];
+
+  for (const movie of movies) {
+    // Generate random number of reviews for each movie (e.g., 5 to 15)
+    const numReviews = Math.floor(Math.random() * 11) + 5;
+    let totalRating = 0;
+
+    for (let i = 0; i < numReviews; i++) {
+      const customer = customers[Math.floor(Math.random() * customers.length)];
+      const rating = Math.floor(Math.random() * 5) + 1; // 1 to 5
+      totalRating += rating;
+
+      reviewsData.push({
+        movieId: movie.id,
+        customerId: customer.id,
+        rating,
+        content: contents[Math.floor(Math.random() * contents.length)],
+      });
+    }
+
+    // Calculate and update the movie's rating stats
+    const averageRating = parseFloat((totalRating / numReviews).toFixed(1));
+    await prisma.movie.update({
+      where: { id: movie.id },
+      data: {
+        averageRating,
+        ratingCount: numReviews,
+      },
+    });
+  }
+
+  await prisma.review.createMany({
+    data: reviewsData,
+  });
+}
+
 async function seedPromotions() {
   const promotionSeeds = [
     {
@@ -631,7 +729,8 @@ async function seedPromotions() {
       badge: 'Save 25%',
       startsAt: new Date('2026-07-01'),
       endsAt: new Date('2026-08-31'),
-      terms: 'Valid while supplies last. Cannot be combined with other promotions.',
+      terms:
+        'Valid while supplies last. Cannot be combined with other promotions.',
       isActive: true,
     },
     {
@@ -662,8 +761,10 @@ async function seedArticles() {
     {
       slug: 'imax-laser-experience',
       title: 'Why IMAX Laser changes the cinema experience',
-      excerpt: 'Sharper projection, richer contrast, and bigger sound for blockbuster nights.',
-      content: 'IMAX Laser combines high brightness projection with precise audio tuning for premium auditoriums.',
+      excerpt:
+        'Sharper projection, richer contrast, and bigger sound for blockbuster nights.',
+      content:
+        'IMAX Laser combines high brightness projection with precise audio tuning for premium auditoriums.',
       coverUrl: 'https://images.unsplash.com/photo-1524985069026-dd778a71c7b4',
       category: 'Technology',
       status: ArticleStatus.PUBLISHED,
@@ -673,7 +774,8 @@ async function seedArticles() {
       slug: 'summer-movie-guide-2026',
       title: 'Summer movie guide 2026',
       excerpt: 'A quick look at the biggest releases arriving this summer.',
-      content: 'From animation to sci-fi and thrillers, this summer lineup brings something for every movie fan.',
+      content:
+        'From animation to sci-fi and thrillers, this summer lineup brings something for every movie fan.',
       coverUrl: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26',
       category: 'Movies',
       status: ArticleStatus.PUBLISHED,
@@ -690,7 +792,7 @@ async function seedArticles() {
   }
 }
 
-async function seedUsers(roles: Record<string, string>, branchId: string) {
+async function seedUsers(roles: Record<string, number>, branchId: number) {
   const hashPassword = await bcrypt.hash('Admin@2026', 10);
 
   await prisma.user.upsert({
@@ -802,6 +904,107 @@ async function seedUsers(roles: Record<string, string>, branchId: string) {
   });
 }
 
+async function seedShowtimes(branchId: number) {
+  console.log('Seeding showtimes...');
+  // Clear old showtimes to avoid conflicts
+  await prisma.showtime.deleteMany({});
+
+  const movies = await prisma.movie.findMany({
+    where: { status: MovieStatus.NOW_SHOWING },
+  });
+
+  const auditoriums = await prisma.auditorium.findMany({
+    where: { branchId },
+  });
+
+  if (movies.length === 0 || auditoriums.length === 0) return;
+
+  const showtimesData: any[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Generate showtimes for next 7 days
+  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+    const currentDate = new Date(today);
+    currentDate.setDate(currentDate.getDate() + dayOffset);
+
+    // Some fixed time slots: 09:00, 13:30, 18:00, 21:00
+    const timeSlots = [
+      { h: 9, m: 0 },
+      { h: 13, m: 30 },
+      { h: 18, m: 0 },
+      { h: 21, m: 0 },
+    ];
+
+    for (let i = 0; i < auditoriums.length; i++) {
+      const auditorium = auditoriums[i];
+
+      for (const slot of timeSlots) {
+        // Pick a random movie to ensure varied time slots for all movies
+        const movie = movies[Math.floor(Math.random() * movies.length)];
+
+        const startsAt = new Date(currentDate);
+        startsAt.setHours(slot.h, slot.m, 0, 0);
+
+        const endsAt = new Date(startsAt);
+        endsAt.setMinutes(endsAt.getMinutes() + movie.duration);
+
+        // Make sure we don't seed past showtimes as SELLING/SCHEDULED without logic,
+        // but for testing today's showtimes, it's fine.
+        showtimesData.push({
+          branchId,
+          auditoriumId: auditorium.id,
+          movieId: movie.id,
+          startsAt,
+          endsAt,
+          status: 'SCHEDULED', // Using string or enum depending on generation. Let's use Prisma generated type but string is usually fine in createMany
+          basePrice: 90000,
+        });
+      }
+    }
+  }
+
+  await prisma.showtime.createMany({
+    data: showtimesData as any,
+  });
+}
+
+async function seedCombos() {
+  console.log('Seeding combos...');
+  await prisma.combo.deleteMany({});
+
+  const comboSeeds = [
+    {
+      name: 'Combo 1 Bắp 2 Nước',
+      description: '1 Bắp lớn + 2 Nước lớn',
+      price: 105000,
+      imageUrl: 'https://images.unsplash.com/photo-1572177215152-32f247303126',
+    },
+    {
+      name: 'Combo 1 Bắp 1 Nước',
+      description: '1 Bắp vừa + 1 Nước vừa',
+      price: 75000,
+      imageUrl: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff',
+    },
+    {
+      name: 'Bắp Rang Bơ (Popcorn)',
+      description: '1 Bắp vừa',
+      price: 55000,
+      imageUrl: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330',
+    },
+    {
+      name: 'Nước Ngọt (Drink)',
+      description: '1 Nước vừa',
+      price: 35000,
+      imageUrl: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97',
+    },
+  ];
+
+  await prisma.combo.createMany({
+    data: comboSeeds,
+  });
+}
+
 async function main() {
   console.log('Starting cinema seed...');
 
@@ -814,6 +1017,10 @@ async function main() {
   await seedPromotions();
   await seedArticles();
   await seedUsers(roles, branches[0].id);
+  await seedReviews();
+
+  await seedShowtimes(branches[0].id);
+  await seedCombos();
 
   console.log('Cinema seed completed.');
 }

@@ -31,8 +31,8 @@ export class AuthService {
     return null;
   }
 
-  private async getTokens(userId: string, email: string | null, userType: string, branchId?: string | null, branchName?: string | null) {
-    const payload: IJwtPayload = { sub: userId, email, userType, branchId, branchName };
+  private async getTokens(userId: number, email: string | null, userType: string, branchId?: number | null, branchName?: string | null) {
+    const payload: IJwtPayload = { sub: String(userId), email, userType, branchId, branchName };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_SECRET') || 'FALLBACK_KEY',
@@ -131,7 +131,7 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: string, refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async refreshTokens(userId: number, refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException('Người dùng không tồn tại');
@@ -153,7 +153,7 @@ export class AuthService {
     return tokens;
   }
 
-  async logout(userId: string): Promise<void> {
+  async logout(userId: number): Promise<void> {
     await this.redisService.del(`refresh_token:${userId}`);
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
+import {ParseIntPipe,  Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { EmployeePageOptionsDto } from './dto/employee-page-options.dto';
 import { Prisma } from '.prisma/generated';
@@ -18,12 +18,12 @@ export class EmployeesController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: any) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.employeesService.update(id, data);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.employeesService.remove(id);
   }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '@components/AppText';
+import { ticketStyles as styles } from './styles';
 
 const TicketScreen = () => {
   return (
@@ -10,16 +11,6 @@ const TicketScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-});
+
 
 export default TicketScreen;

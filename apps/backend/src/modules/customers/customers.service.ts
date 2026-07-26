@@ -87,7 +87,7 @@ export class CustomersService {
     });
   }
 
-  async update(id: string, data: any) {
+  async update(id: number, data: any) {
     return this.prisma.customer.update({
       where: { id },
       data: {
@@ -110,7 +110,7 @@ export class CustomersService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     const customer = await this.prisma.customer.findUnique({ where: { id } });
     if (customer) {
       await this.prisma.user.delete({

@@ -62,7 +62,7 @@ export class BranchesService {
     }));
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const branch = await this.prisma.branch.findUnique({
       where: { id },
     });
@@ -72,7 +72,7 @@ export class BranchesService {
     return branch;
   }
 
-  async update(id: string, updateBranchDto: UpdateBranchDto) {
+  async update(id: number, updateBranchDto: UpdateBranchDto) {
     await this.findOne(id); // Ensure exists
     return this.prisma.branch.update({
       where: { id },
@@ -80,7 +80,7 @@ export class BranchesService {
     });
   }
 
-  async toggleStatus(id: string) {
+  async toggleStatus(id: number) {
     const branch = await this.findOne(id);
     return this.prisma.branch.update({
       where: { id },

@@ -17,6 +17,7 @@ import { AuditoriumModule } from './modules/auditorium/auditorium.module';
 import { ShowtimeModule } from './modules/showtime/showtime.module';
 import { SeatModule } from './modules/seat/seat.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
+import { BookingModule } from './modules/booking/booking.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { PromotionsModule } from './modules/promotions/promotions.module';
     SeatModule,
     ShowtimeModule,
     PromotionsModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

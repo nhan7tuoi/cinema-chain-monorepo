@@ -32,7 +32,7 @@ export class RolesService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     return this.prisma.role.findUnique({
       where: { id },
       include: {
@@ -43,7 +43,7 @@ export class RolesService {
     });
   }
 
-  async updateRolePermissions(id: string, permissionIds: string[]) {
+  async updateRolePermissions(id: number, permissionIds: number[]) {
     await this.prisma.rolePermission.deleteMany({
       where: { roleId: id },
     });

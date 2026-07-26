@@ -31,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const permissions: string[] = role?.permissions?.map((rp: any) => rp.permission?.name).filter(Boolean) || [];
 
     return {
-      userId: payload.sub,
+      userId: Number(payload.sub),
       email: payload.email,
       userType: payload.userType,
       permissions,

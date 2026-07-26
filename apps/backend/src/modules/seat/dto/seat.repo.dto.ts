@@ -13,8 +13,8 @@ import {
 
 export class SeatLayoutItemDto {
   @IsOptional()
-  @IsString()
-  id?: string;
+  @IsInt()
+  id?: number;
 
   @IsString()
   rowLabel: string;

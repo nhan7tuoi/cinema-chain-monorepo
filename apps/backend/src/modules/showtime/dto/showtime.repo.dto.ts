@@ -1,13 +1,13 @@
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, Min, IsInt } from "class-validator";
 import { ShowtimeStatus } from ".prisma/generated";
 
 export class CreateShowtimeDto {
     @IsNotEmpty()
-    branchId: string;
+    branchId: number;
     @IsNotEmpty()
-    auditoriumId: string;
+    auditoriumId: number;
     @IsNotEmpty()
-    movieId: string;
+    movieId: number;
     @IsNotEmpty()
     startsAt: Date;
     @IsOptional()
@@ -26,13 +26,13 @@ export class CreateShowtimeDto {
 
 export class GenerateShowtimesDto {
     @IsNotEmpty()
-    branchId: string;
+    branchId: number;
 
     @IsNotEmpty()
-    auditoriumId: string;
+    auditoriumId: number;
 
     @IsNotEmpty()
-    movieId: string;
+    movieId: number;
 
     @IsNotEmpty()
     dateFrom: string;
@@ -66,15 +66,15 @@ export class GenerateShowtimesDto {
 }
 
 export class UpdateShowtimeDto {
-    @IsString()
+    @IsInt()
     @IsOptional()
-    branchId: string;
-    @IsString()
+    branchId: number;
+    @IsInt()
     @IsOptional()
-    auditoriumId: string;
-    @IsString()
+    auditoriumId: number;
+    @IsInt()
     @IsOptional()
-    movieId: string;
+    movieId: number;
     @IsOptional()
     startsAt: Date;
     @IsOptional()

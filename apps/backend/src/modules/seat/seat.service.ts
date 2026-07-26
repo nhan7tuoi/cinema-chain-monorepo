@@ -8,7 +8,7 @@ import { CreateSeatDto, SaveSeatLayoutDto, SeatLayoutItemDto, UpdateSeatDto } fr
 export class SeatService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getByAuditorium(auditoriumId: string) {
+  async getByAuditorium(auditoriumId: number) {
     await this.ensureAuditoriumExists(auditoriumId);
 
     return this.prisma.seat.findMany({
@@ -17,7 +17,7 @@ export class SeatService {
     });
   }
 
-  async create(auditoriumId: string, dto: CreateSeatDto) {
+  async create(auditoriumId: number, dto: CreateSeatDto) {
     const auditorium = await this.ensureAuditoriumExists(auditoriumId);
     const layoutRows = Math.max(auditorium.layoutRows, dto.gridRow + 1);
     const layoutCols = Math.max(auditorium.layoutCols, dto.gridCol);
@@ -41,7 +41,7 @@ export class SeatService {
     return seat;
   }
 
-  async update(id: string, dto: UpdateSeatDto) {
+  async update(id: number, dto: UpdateSeatDto) {
     const current = await this.prisma.seat.findUnique({ where: { id } });
     if (!current) {
       throw new NotFoundException("Seat not found");
@@ -65,7 +65,7 @@ export class SeatService {
     return seat;
   }
 
-  async delete(id: string) {
+  async delete(id: number) {
     const current = await this.prisma.seat.findUnique({ where: { id } });
     if (!current) {
       throw new NotFoundException("Seat not found");
@@ -76,7 +76,7 @@ export class SeatService {
     return seat;
   }
 
-  async saveLayout(auditoriumId: string, dto: SaveSeatLayoutDto) {
+  async saveLayout(auditoriumId: number, dto: SaveSeatLayoutDto) {
     this.validateLayout(dto);
 
     return this.prisma.$transaction(async (tx) => {
@@ -181,7 +181,7 @@ export class SeatService {
     }
   }
 
-  async syncAuditoriumCapacity(auditoriumId: string) {
+  async syncAuditoriumCapacity(auditoriumId: number) {
     const activeSeatCount = await this.prisma.seat.count({
       where: { auditoriumId, status: SeatStatus.ACTIVE },
     });
@@ -202,7 +202,7 @@ export class SeatService {
     }
   }
 
-  private async ensureAuditoriumExists(auditoriumId: string) {
+  private async ensureAuditoriumExists(auditoriumId: number) {
     const auditorium = await this.prisma.auditorium.findUnique({
       where: { id: auditoriumId },
       select: { id: true, layoutRows: true, layoutCols: true },

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsInt } from 'class-validator';
 import { PageOptionsDto } from '../../../common/pagination/page-options.dto';
 import { UserStatus } from '.prisma/generated';
 
@@ -7,7 +7,7 @@ export class EmployeePageOptionsDto extends PageOptionsDto {
   @IsOptional()
   readonly status?: UserStatus;
 
-  @IsString()
+  @IsInt()
   @IsOptional()
-  readonly roleId?: string;
+  readonly roleId?: number;
 }

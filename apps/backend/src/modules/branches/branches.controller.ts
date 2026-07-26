@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards } from '@nestjs/common';
+import {ParseIntPipe,  Controller, Get, Post, Body, Patch, Param, UseGuards } from '@nestjs/common';
 import { BranchesService } from './branches.service';
 import { CreateBranchDto, UpdateBranchDto } from './dto/branch.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -30,21 +30,21 @@ export class BranchesController {
   @Get(':id')
   @RequirePermissions('branch:read')
   @ApiOperation({ summary: 'Lấy chi tiết một chi nhánh' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.branchesService.findOne(id);
   }
 
   @Patch(':id')
   @RequirePermissions('branch:write')
   @ApiOperation({ summary: 'Cập nhật thông tin chi nhánh' })
-  update(@Param('id') id: string, @Body() updateBranchDto: UpdateBranchDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateBranchDto: UpdateBranchDto) {
     return this.branchesService.update(id, updateBranchDto);
   }
 
   @Patch(':id/toggle-status')
   @RequirePermissions('branch:write')
   @ApiOperation({ summary: 'Bật/Tắt trạng thái hoạt động của chi nhánh' })
-  toggleStatus(@Param('id') id: string) {
+  toggleStatus(@Param('id', ParseIntPipe) id: number) {
     return this.branchesService.toggleStatus(id);
   }
 }

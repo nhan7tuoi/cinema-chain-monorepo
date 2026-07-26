@@ -6,7 +6,7 @@ import { CreateAuditoriumDto, UpdateAuditoriumDto } from "./dto/auditorium.repo.
 export class AuditoriumService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async getAll(branchId?: string) {
+    async getAll(branchId?: number) {
         return this.prisma.auditorium.findMany({
             where: branchId ? { branchId } : undefined,
             include: {
@@ -19,7 +19,7 @@ export class AuditoriumService {
         });
     }
 
-    async getById(id: string) {
+    async getById(id: number) {
         const auditorium = await this.prisma.auditorium.findUnique({
             where: { id },
             include: {
@@ -52,7 +52,7 @@ export class AuditoriumService {
         });
     }
 
-    async update(id: string, data: UpdateAuditoriumDto) {
+    async update(id: number, data: UpdateAuditoriumDto) {
         await this.getById(id);
 
         return this.prisma.auditorium.update({
@@ -62,7 +62,7 @@ export class AuditoriumService {
         });
     }
 
-    async delete(id: string) {
+    async delete(id: number) {
         await this.getById(id);
 
         const futureShowtimes = await this.prisma.showtime.count({

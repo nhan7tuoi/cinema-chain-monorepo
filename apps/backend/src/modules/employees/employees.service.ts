@@ -139,7 +139,7 @@ export class EmployeesService {
     });
   }
 
-  async update(id: string, data: any) {
+  async update(id: number, data: any) {
     return this.prisma.employee.update({
       where: { id },
       data: {
@@ -165,7 +165,7 @@ export class EmployeesService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     const employee = await this.prisma.employee.findUnique({ where: { id } });
     if (employee) {
       await this.prisma.user.delete({

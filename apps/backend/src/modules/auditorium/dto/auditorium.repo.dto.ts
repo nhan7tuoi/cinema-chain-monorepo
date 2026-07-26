@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, IsInt } from "class-validator";
 
 export class CreateAuditoriumDto {
     @IsNotEmpty()
@@ -15,8 +15,8 @@ export class CreateAuditoriumDto {
     capacity?: number;
 
     @IsNotEmpty()
-    @IsString()
-    branchId: string;
+    @IsInt()
+    branchId: number;
 
     @IsOptional()
     @IsNumber()
@@ -50,8 +50,8 @@ export class UpdateAuditoriumDto {
     capacity?: number;
 
     @IsOptional()
-    @IsString()
-    branchId?: string;
+    @IsInt()
+    branchId?: number;
 
     @IsOptional()
     @IsNumber()

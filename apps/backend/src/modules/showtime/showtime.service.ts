@@ -93,7 +93,7 @@ export class ShowtimeService {
     }
 
     /** Lay thoi luong phim tu database de tinh gio ket thuc suat chieu. */
-    private async getMovieDuration(movieId: string) {
+    private async getMovieDuration(movieId: number) {
         const movie = await this.prisma.movie.findUnique({
             where: { id: movieId },
             select: { duration: true },
@@ -107,7 +107,7 @@ export class ShowtimeService {
     }
 
     /** Kiem tra phong chieu co ton tai va thuoc dung rap dang thao tac hay khong. */
-    private async ensureAuditoriumBelongsToBranch(branchId: string, auditoriumId: string) {
+    private async ensureAuditoriumBelongsToBranch(branchId: number, auditoriumId: number) {
         const auditorium = await this.prisma.auditorium.findUnique({
             where: { id: auditoriumId },
             select: { branchId: true },
@@ -123,7 +123,7 @@ export class ShowtimeService {
     }
 
     /** Kiem tra trung lich trong cung phong, bao gom ca khoang cach toi thieu truoc/sau suat chieu. */
-    private async hasTimeConflict(auditoriumId: string, startsAt: Date, endsAt: Date, bufferMinutes = this.defaultBufferMinutes, excludeId?: string) {
+    private async hasTimeConflict(auditoriumId: number, startsAt: Date, endsAt: Date, bufferMinutes = this.defaultBufferMinutes, excludeId?: number) {
         const minGapMinutes = this.normalizeBuffer(bufferMinutes);
         const conflictStart = this.addMinutes(startsAt, -minGapMinutes);
         const conflictEnd = this.addMinutes(endsAt, minGapMinutes);
@@ -155,7 +155,7 @@ export class ShowtimeService {
     }
 
     /** Build du lieu suat chieu hop le cho create/update: tinh endsAt, validate phong, gio, buffer va trung lich. */
-    private async buildShowtimeData(data: CreateShowtimeDto | UpdateShowtimeDto, currentId?: string) {
+    private async buildShowtimeData(data: CreateShowtimeDto | UpdateShowtimeDto, currentId?: number) {
         if (!data.branchId || !data.auditoriumId || !data.movieId || !data.startsAt) {
             throw new BadRequestException('branchId, auditoriumId, movieId and startsAt are required.');
         }
@@ -186,7 +186,7 @@ export class ShowtimeService {
     }
 
     /** Lay danh sach suat chieu theo rap/ngay/khoang ngay va include thong tin rap, phong, phim. */
-    async getAll(filters?: { branchId?: string; date?: string; dateFrom?: string; dateTo?: string }) {
+    async getAll(filters?: { branchId?: number; date?: string; dateFrom?: string; dateTo?: string }) {
         await this.markFinishedShowtimes();
 
         const where: Prisma.ShowtimeWhereInput = {};
@@ -321,7 +321,7 @@ export class ShowtimeService {
     }
 
     /** Cap nhat suat chieu; neu da chieu xong thi chi cho sua ghi chu. */
-    async update(id: string, data: UpdateShowtimeDto) {
+    async update(id: number, data: UpdateShowtimeDto) {
         await this.markFinishedShowtimes();
 
         const showtime = await this.prisma.showtime.findUnique({ where: { id } });
@@ -364,7 +364,142 @@ export class ShowtimeService {
     }
 
     /** Xoa mot suat chieu theo id. */
-    async delete(id: string) {
+    async delete(id: number) {
         return this.prisma.showtime.delete({ where: { id } });
     }
+
+    /** Tinh khoang cach (km) dua tren kinh do vi do theo cong thuc Haversine. */
+    private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
+        const R = 6371; // Ban kinh Trai Dat (km)
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a = 
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+            Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+        return R * c;
+    }
+
+    /** Lay danh sach suat chieu cho phia Client: group theo rap va format (2D/3D) */
+    async getClientShowtimesByMovie(movieId: number, date: string, latitude?: number, longitude?: number) {
+        await this.markFinishedShowtimes();
+
+        const start = new Date(`${date}T00:00:00.000Z`);
+        const end = new Date(`${date}T23:59:59.999Z`);
+
+        const showtimes = await this.prisma.showtime.findMany({
+            where: {
+                movieId,
+                startsAt: {
+                    gte: start,
+                    lte: end,
+                },
+                status: {
+                    in: [ShowtimeStatus.SCHEDULED, ShowtimeStatus.SELLING],
+                },
+            },
+            include: {
+                branch: true,
+                auditorium: true,
+            },
+            orderBy: {
+                startsAt: 'asc',
+            },
+        });
+
+        // Group by branchId
+        const branchMap = new Map<number, any>();
+
+        for (const st of showtimes) {
+            const branchId = st.branchId;
+            if (!branchMap.has(branchId)) {
+                let distance = 0;
+                if (latitude && longitude && st.branch.latitude && st.branch.longitude) {
+                    distance = this.calculateDistance(Number(latitude), Number(longitude), Number(st.branch.latitude), Number(st.branch.longitude));
+                }
+
+                branchMap.set(branchId, {
+                    id: st.branch.id,
+                    name: st.branch.name,
+                    address: st.branch.address,
+                    distance: parseFloat(distance.toFixed(1)),
+                    formats: new Map<string, any[]>(),
+                });
+            }
+
+            const branchData = branchMap.get(branchId);
+            const format = st.auditorium.format || '2D';
+
+            if (!branchData.formats.has(format)) {
+                branchData.formats.set(format, []);
+            }
+
+            const timeString = st.startsAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' });
+            
+            branchData.formats.get(format).push({
+                id: st.id,
+                time: timeString,
+            });
+        }
+
+        // Convert Map to Array
+        const result = Array.from(branchMap.values()).map(branch => {
+            return {
+                id: branch.id,
+                name: branch.name,
+                address: branch.address,
+                distance: branch.distance,
+                formats: Array.from(branch.formats.entries()).map(([format, showtimes]) => ({
+                    format,
+                    showtimes
+                })),
+            };
+        });
+
+        return result;
+    }
+
+    async getClientShowtimeDetails(id: number) {
+        const showtime = await this.prisma.showtime.findUnique({
+            where: { id },
+            include: {
+                movie: true,
+                branch: true,
+                auditorium: {
+                    include: {
+                        seats: {
+                            orderBy: [
+                                { gridRow: 'asc' },
+                                { gridCol: 'asc' }
+                            ]
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!showtime) {
+            throw new NotFoundException("Showtime not found");
+        }
+
+        const soldTickets = await this.prisma.ticket.findMany({
+            where: {
+                booking: {
+                    showtimeId: id,
+                    status: { in: ['PAID', 'PENDING'] }
+                }
+            },
+            select: { seatId: true }
+        });
+        const soldSeatIds = soldTickets.map(t => t.seatId);
+
+        return {
+            ...showtime,
+            soldSeatIds
+        };
+    }
 }
+
+

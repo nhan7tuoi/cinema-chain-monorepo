@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
+import {ParseIntPipe,  Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CustomerPageOptionsDto } from './dto/customer-page-options.dto';
 
@@ -17,12 +17,12 @@ export class CustomersController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: any) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
     return this.customersService.update(id, data);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.remove(id);
   }
 }

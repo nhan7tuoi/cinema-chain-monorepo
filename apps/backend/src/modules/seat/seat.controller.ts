@@ -9,27 +9,27 @@ export class SeatController {
     constructor(private readonly seatService: SeatService) {}
 
     @Get("auditoriums/:auditoriumId/seats")
-    getByAuditorium(@Param("auditoriumId") auditoriumId: string) {
+    getByAuditorium(@Param("auditoriumId") auditoriumId: number) {
         return this.seatService.getByAuditorium(auditoriumId);
     }
 
     @Post("auditoriums/:auditoriumId/seats")
-    create(@Param("auditoriumId") auditoriumId: string, @Body() dto: CreateSeatDto) {
+    create(@Param("auditoriumId") auditoriumId: number, @Body() dto: CreateSeatDto) {
         return this.seatService.create(auditoriumId, dto);
     }
 
     @Put("seats/:id")
-    update(@Param("id") id: string, @Body() dto: UpdateSeatDto) {
+    update(@Param("id") id: number, @Body() dto: UpdateSeatDto) {
         return this.seatService.update(id, dto);
     }
 
     @Delete("seats/:id")
-    delete(@Param("id") id: string) {
+    delete(@Param("id") id: number) {
         return this.seatService.delete(id);
     }
 
     @Put("auditoriums/:auditoriumId/seats/layout")
-    saveLayout(@Param("auditoriumId") auditoriumId: string, @Body() dto: SaveSeatLayoutDto) {
+    saveLayout(@Param("auditoriumId") auditoriumId: number, @Body() dto: SaveSeatLayoutDto) {
         return this.seatService.saveLayout(auditoriumId, dto);
     }
 }

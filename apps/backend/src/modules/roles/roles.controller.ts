@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Body, UseGuards, Req } from '@nestjs/common';
+import {ParseIntPipe,  Controller, Get, Put, Param, Body, UseGuards, Req } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
@@ -18,14 +18,14 @@ export class RolesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.rolesService.findOne(id);
   }
 
   @Put(':id/permissions')
   updatePermissions(
-    @Param('id') id: string,
-    @Body('permissionIds') permissionIds: string[],
+    @Param('id', ParseIntPipe) id: number,
+    @Body('permissionIds') permissionIds: number[],
   ) {
     return this.rolesService.updateRolePermissions(id, permissionIds);
   }
